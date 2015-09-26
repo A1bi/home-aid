@@ -1,0 +1,16 @@
+{
+  "name": "home-aid",
+  "version": "0.8.0",
+  "description": "Home automation with HomeKit integration.",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/A1bi/home-aid.git"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "hap-nodejs": "git://github.com/KhaosT/HAP-NodeJS.git",
+    "onoff": "^1.0.2",
+    "sleep": "^3.0.0"
+  }
+}
