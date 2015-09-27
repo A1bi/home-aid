@@ -4,7 +4,7 @@ var EventEmitter = require('events').EventEmitter;
 var Gpio = require('onoff').Gpio;
 
 var opener = new Gpio(4, 'out');
-var bellListener = new Gpio(17, 'in', 'falling');
+var bellListener = new Gpio(17, 'in', 'both');
 var bell = new Gpio(27, 'out');
 
 var emitter = new EventEmitter();
@@ -48,8 +48,8 @@ function exit() {
   bell.unexport();
 }
 
-var blocked = false;
-var timer;
+var bellTriggerThreshold = 100;
+var bellLastRise;
 
 bellListener.watch(function (err, value) {
   if (err) {
@@ -60,20 +60,14 @@ bellListener.watch(function (err, value) {
    return;
   }
 
-  if (timer) {
-    clearTimeout(timer);
+  if (bellLastRise) {
+    if (Date.now() - bellLastRise > bellTriggerThreshold) {
+      emitter.emit('bellRang');
+    }
+    bellLastRise = null;
+  } else {
+    bellLastRise = Date.now();
   }
-
-  timer = setTimeout(function () {
-    blocked = false;
-  }, 100);
-
-  if (blocked) {
-    return;
-  }
-  blocked = true;
-
-  emitter.emit('bellRang');
 });
 
 module.exports = {

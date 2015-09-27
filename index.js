@@ -69,6 +69,19 @@ doorOpener
 
 bridge.addBridgedAccessory(door);
 
+Door.on('bellRang', function () {
+  var trigger = function (remaining) {
+    Door.triggerBell(100, function () {
+      if (remaining > 0) {
+        setTimeout(function () {
+          trigger(remaining-1);
+        }, 100);
+      }
+    });
+  }
+  trigger(3);
+});
+
 
 bridge.publish({
   username: "CC:22:3D:E3:CE:F6",
