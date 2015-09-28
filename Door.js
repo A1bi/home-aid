@@ -4,24 +4,10 @@ var EventEmitter = require('events').EventEmitter;
 var Gpio = require('onoff').Gpio;
 
 var opener = new Gpio(4, 'out');
-var bellListener = new Gpio(17, 'in', 'both');
+var bellListener = new Gpio(17, 'in', 'rising');
 var bell = new Gpio(27, 'out');
 
 var emitter = new EventEmitter();
-
-var ignoreBell = false;
-
-bell._writeSync = bell.writeSync;
-bell.writeSync = function (value) {
-  if (value) {
-    ignoreBell = true;
-  } else {
-    setTimeout(function () {
-      ignoreBell = false;
-    }, 50);
-  }
-  this._writeSync(value);
-};
 
 function trigger(pin, duration, callback) {
   pin.writeSync(1);
@@ -51,22 +37,31 @@ function exit() {
 var bellTriggerThreshold = 100;
 var bellLastRise;
 
+function checkBell() {
+  if (bellListener.readSync()) {
+    if (!bellLastRise) {
+      bellLastRise = Date.now();
+    }
+
+    setTimeout(checkBell, 20);
+
+  } else {
+    var duration = Date.now() - bellLastRise;
+    if (duration > bellTriggerThreshold) {
+      emitter.emit('bellRang', duration);
+    }
+
+    bellLastRise = null;
+  }
+}
+
 bellListener.watch(function (err, value) {
   if (err) {
     throw err;
   }
 
-  if (ignoreBell) {
-   return;
-  }
-
-  if (bellLastRise) {
-    if (Date.now() - bellLastRise > bellTriggerThreshold) {
-      emitter.emit('bellRang');
-    }
-    bellLastRise = null;
-  } else {
-    bellLastRise = Date.now();
+  if (!bellLastRise) {
+    checkBell();
   }
 });
 
