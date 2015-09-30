@@ -1,96 +1,40 @@
 'use strict';
 
-var HomeKit = require('hap-nodejs');
-
 var Door = require('./Door');
 var Outlets = require('./Outlets');
+var HomeKitServer = require('./HomeKitServer');
+var BellPatternRecognizer = require('./BellPatternRecognizer');
 
-HomeKit.init();
-var bridge = new HomeKit.Bridge('Home Aid Bridge', HomeKit.uuid.generate('Home Aid Bridge'));
-
-function createAccessory(name) {
-  var uuid = HomeKit.uuid.generate('home-aid:accessories:' + name);
-  var accessory = new HomeKit.Accessory(name, uuid);
-  accessory
-    .getService(HomeKit.Service.AccessoryInformation)
-    .setCharacteristic(HomeKit.Characteristic.Manufacturer, 'Bäsch GmbH')
-    .setCharacteristic(HomeKit.Characteristic.Model, 'Eins')
-    .setCharacteristic(HomeKit.Characteristic.SerialNumber, '12345678')
-  ;
-  return accessory;
-}
-
-
-// outlets
+var hkPin = '031-45-154';
 var numberOfOutlets = 3;
-var outletSet = createAccessory('Outlet');
+var pattern = [1, 1, 1, 1.8, 1.8, 1, 1];
 
-for (var i = 1; i <= numberOfOutlets; i++) {
-  outletSet
-    .addService(HomeKit.Service.Lightbulb, 'Outlet ' + i, i)
-    .getCharacteristic(HomeKit.Characteristic.On)
-    .on('set', (function (j) {
-      return function (value, callback) {
-        Outlets.toggle(j, value);
-        callback();
-      }
-    })(i))
-    .on('get', (function (j) {
-      return function (callback) {
-        callback(null, Outlets.getState(j));
-      }
-    })(i))
-  ;
-}
+var hkServer = new HomeKitServer();
+hkServer.addOutlets(numberOfOutlets);
+hkServer.addDoor();
+hkServer.publish(hkPin);
 
-bridge.addBridgedAccessory(outletSet);
+var recognizer = new BellPatternRecognizer();
+recognizer.addPattern(pattern, function () {
+  Door.triggerOpener();
+});
+recognizer.on('bellRang', function () {
+  triggerBell(5);
+});
 
+Door.on('bellRang', function () {
+  console.log(new Date());
+});
 
-// door
-var door = createAccessory('Door');
-
-var getDoorState = function (callback) {
-  callback(null, HomeKit.Characteristic.LockTargetState.SECURED);
-};
-
-var doorOpener = door.addService(HomeKit.Service.LockMechanism, 'Opener');
-doorOpener
-  .getCharacteristic(HomeKit.Characteristic.LockTargetState)
-  .on('set', function (value, callback) {
-    Door.triggerOpener();
-    callback();
-  })
-  .on('get', getDoorState)
-;
-doorOpener
-  .getCharacteristic(HomeKit.Characteristic.LockCurrentState)
-  .on('get', getDoorState)
-;
-
-bridge.addBridgedAccessory(door);
-
-var trigger = function (remaining) {
-  Door.triggerBell(100, function () {
+var triggerBell = function (remaining) {
+  Door.triggerBell(10, function () {
     if (remaining > 0) {
       setTimeout(function () {
-        trigger(remaining-1);
-      }, 100);
+        triggerBell(remaining-1);
+      }, 10);
     }
   });
 };
-
-Door.on('bellRang', function () {
-  trigger(2);
-});
-
-
-bridge.publish({
-  username: "CC:22:3D:E3:CE:F6",
-  port: 51826,
-  pincode: '031-45-154',
-  category: HomeKit.Accessory.Categories.OTHER
-});
-
 
 function exit() {
   Door.exit();

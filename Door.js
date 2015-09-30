@@ -45,7 +45,7 @@ function checkBell() {
 
     setTimeout(checkBell, 20);
 
-  } else {
+  } else if (bellLastRise) {
     var duration = Date.now() - bellLastRise;
     if (duration > bellTriggerThreshold) {
       emitter.emit('bellRang', duration);
