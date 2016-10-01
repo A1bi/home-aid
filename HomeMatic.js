@@ -3,6 +3,8 @@
 var EventEmitter = require('events').EventEmitter;
 var rpc = require('binrpc');
 
+var HomeMaticDevice = require('./HomeMaticDevice');
+
 var hosts = {
   self: {
     host: 'localhost',
@@ -17,12 +19,10 @@ var hosts = {
 var rpcServer, rpcClient;
 var subscriptionUrl = 'xmlrpc_bin://' + hosts.self.host + ':' + hosts.self.port;
 
-var devices = {
-  THERMOSTAT: 1
-};
 var deviceMappings = {
-  'CLIMATECONTROL_RT_TRANSCEIVER': devices.THERMOSTAT
+  'CLIMATECONTROL_RT_TRANSCEIVER': HomeMaticDevice.types.THERMOSTAT
 };
+var devices = {};
 
 var emitter = new EventEmitter();
 
@@ -37,16 +37,20 @@ function registerEvents() {
   // });
 
   rpcServer.on('event', function (err, params, callback) {
-    console.log(' < event', params);
-    callback(['']);
+    var device = devices[params[1]];
+    if (device) {
+      device.applyUpdate(params[2], params[3]);
+    }
+    callback();
   });
 
   rpcServer.on('newDevices', function (err, params, callback) {
     var newDevices = params[1];
     newDevices.forEach(function (newDevice) {
-      var device = deviceMappings[newDevice.TYPE];
-      if (device) {
-        emitter.emit('newDevice', device, newDevice.ADDRESS);
+      var deviceType = deviceMappings[newDevice.TYPE];
+      if (deviceType) {
+        var device = devices[newDevice.ADDRESS] = new HomeMaticDevice(deviceType, newDevice.ADDRESS);
+        emitter.emit('newDevice', device);
       }
     });
     callback(null);

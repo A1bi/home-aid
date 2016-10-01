@@ -5,8 +5,15 @@ var HomeKit = require('hap-nodejs');
 var Door = require('./Door');
 var Outlets = require('./Outlets');
 var HomeMatic = require('./HomeMatic');
+var HomeMaticDevice = require('./HomeMaticDevice');
 
 module.exports = HomeKitServer;
+
+var homeMaticCharacteristicsMappings = {
+  'SET_TEMPERATURE': HomeKit.Characteristic.TargetTemperature,
+  'ACTUAL_TEMPERATURE': HomeKit.Characteristic.CurrentTemperature,
+  'BATTERY_STATE': HomeKit.Characteristic.BatteryLevel
+};
 
 function HomeKitServer() {
   HomeKit.init();
@@ -62,10 +69,29 @@ HomeKitServer.prototype.addDoor = function () {
 };
 
 HomeKitServer.prototype.addHomeMatic = function () {
-  HomeMatic.on('newDevice', function (type, address) {
-    console.log('found new device with address ' + address);
-    console.log(type === HomeMatic.devices.THERMOSTAT);
-  });
+  HomeMatic.on('newDevice', function (device) {
+    if (device.type === HomeMaticDevice.types.Thermostat) {
+      var accessory = this._createAccessory('Thermostat ' + device.address);
+      var thermostat = accessory.addService(HomeKit.Service.Thermostat);
+      thermostat
+        .getCharacteristic(HomeKit.Characteristic.CurrentTemperature)
+        // .on('set', function (value, callback) {
+        // })
+        // .on('get', function (value, callback) {
+        //
+        // })
+      ;
+
+      device.on('update', function (characteristic, value) {
+        var homeKitCharacteristic = homeMaticCharacteristicsMappings[characteristic];
+        if (homeKitCharacteristic) {
+          thermostat.setCharacteristic(homeKitCharacteristic, value);
+        }
+      });
+
+      this._addAccessory(accessory);
+    }
+  }.bind(this));
 };
 
 HomeKitServer.prototype.publish = function (pin) {
