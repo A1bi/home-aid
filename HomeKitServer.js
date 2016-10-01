@@ -14,10 +14,9 @@ function HomeKitServer() {
 }
 
 HomeKitServer.prototype.addOutlets = function (numberOfOutlets) {
-  var outletSet = this._createAccessory('Outlet');
-
   for (var i = 1; i <= numberOfOutlets; i++) {
-    outletSet
+    var outlet = this._createAccessory('Outlet ' + i);
+    outlet
       .addService(HomeKit.Service.Lightbulb, 'Outlet ' + i, i)
       .getCharacteristic(HomeKit.Characteristic.On)
       .on('set', (function (j) {
@@ -32,9 +31,9 @@ HomeKitServer.prototype.addOutlets = function (numberOfOutlets) {
         }
       })(i))
     ;
-  }
 
-  this._addAccessory(outletSet);
+    this._addAccessory(outlet);
+  }
 };
 
 HomeKitServer.prototype.addDoor = function () {
