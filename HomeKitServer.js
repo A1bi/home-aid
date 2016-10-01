@@ -4,6 +4,7 @@ var HomeKit = require('hap-nodejs');
 
 var Door = require('./Door');
 var Outlets = require('./Outlets');
+var HomeMatic = require('./HomeMatic');
 
 module.exports = HomeKitServer;
 
@@ -58,6 +59,13 @@ HomeKitServer.prototype.addDoor = function () {
   ;
 
   this._addAccessory(door);
+};
+
+HomeKitServer.prototype.addHomeMatic = function () {
+  HomeMatic.on('newDevice', function (type, address) {
+    console.log('found new device with address ' + address);
+    console.log(type === HomeMatic.devices.THERMOSTAT);
+  });
 };
 
 HomeKitServer.prototype.publish = function (pin) {

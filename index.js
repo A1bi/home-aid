@@ -2,6 +2,7 @@
 
 var Door = require('./Door');
 var Outlets = require('./Outlets');
+var HomeMatic = require('./HomeMatic');
 var HomeKitServer = require('./HomeKitServer');
 var BellPatternRecognizer = require('./BellPatternRecognizer');
 
@@ -9,9 +10,12 @@ var hkPin = '031-45-154';
 var numberOfOutlets = 3;
 var pattern = [1, 1, 1, 1.8, 1.8, 1, 1];
 
+HomeMatic.init();
+
 var hkServer = new HomeKitServer();
 hkServer.addOutlets(numberOfOutlets);
 hkServer.addDoor();
+hkServer.addHomeMatic();
 hkServer.publish(hkPin);
 
 var recognizer = new BellPatternRecognizer();
@@ -36,11 +40,16 @@ var triggerBell = function (remaining) {
   });
 };
 
-function exit() {
+function exit(options) {
   Door.exit();
   Outlets.exit();
+  HomeMatic.exit();
 
   console.log('Exiting');
+  if (options && options.exit) {
+    process.exit();
+  }
 }
 
 process.on('exit', exit);
+process.on('SIGINT', exit.bind(null, { exit: true }));
