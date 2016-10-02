@@ -20,7 +20,7 @@ var rpcServer, rpcClient;
 var subscriptionUrl = 'xmlrpc_bin://' + hosts.self.host + ':' + hosts.self.port;
 
 var deviceMappings = {
-  'CLIMATECONTROL_RT_TRANSCEIVER': HomeMaticDevice.types.THERMOSTAT
+  'CLIMATECONTROL_RT_TRANSCEIVER': HomeMaticDevice.types.Thermostat
 };
 var devices = {};
 
@@ -49,7 +49,7 @@ function registerEvents() {
     newDevices.forEach(function (newDevice) {
       var deviceType = deviceMappings[newDevice.TYPE];
       if (deviceType) {
-        var device = devices[newDevice.ADDRESS] = new HomeMaticDevice(deviceType, newDevice.ADDRESS);
+        var device = devices[newDevice.ADDRESS] = new HomeMaticDevice(deviceType, newDevice.ADDRESS, methodCall);
         emitter.emit('newDevice', device);
       }
     });
@@ -68,14 +68,26 @@ function registerEvents() {
   // }
 }
 
+function methodCall(method, params, callback) {
+  rpcClient.methodCall(method, params, function (err, res) {
+    if (err) {
+      console.log(err);
+    }
+
+    if (callback) {
+      callback(err, res);
+    }
+  });
+}
+
 function subscribe() {
-  rpcClient.methodCall('init', [subscriptionUrl, 'foo'], function (err, res) {
+  methodCall('init', [subscriptionUrl, 'foo'], function (err, res) {
     console.log('Subscribed to HomeMatic events.');
   });
 }
 
 function unsubscribe(callback) {
-  rpcClient.methodCall('init', [subscriptionUrl, ''], function (err, res) {
+  methodCall('init', [subscriptionUrl, ''], function (err, res) {
     console.log('Unsubscribed from HomeMatic events.');
     if (callback) {
       callback();

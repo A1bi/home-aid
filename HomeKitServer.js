@@ -69,29 +69,48 @@ HomeKitServer.prototype.addDoor = function () {
 };
 
 HomeKitServer.prototype.addHomeMatic = function () {
-  HomeMatic.on('newDevice', function (device) {
-    if (device.type === HomeMaticDevice.types.Thermostat) {
-      var accessory = this._createAccessory('Thermostat ' + device.address);
-      var thermostat = accessory.addService(HomeKit.Service.Thermostat);
-      thermostat
-        .getCharacteristic(HomeKit.Characteristic.CurrentTemperature)
-        // .on('set', function (value, callback) {
-        // })
-        // .on('get', function (value, callback) {
-        //
-        // })
-      ;
+  var _this = this;
 
-      device.on('update', function (characteristic, value) {
+  HomeMatic.on('newDevice', function (device) {
+    var accessory = _this._createAccessory(device.address);
+    var thermostat = accessory.addService(HomeKit.Service.Thermostat);
+
+    device
+      .on('ready', function () {
+        device.getCharacteristics().forEach(function (characteristicName) {
+          var homeKitCharacteristic = homeMaticCharacteristicsMappings[characteristicName];
+          if (homeKitCharacteristic) {
+            var characteristic = thermostat.getCharacteristic(homeKitCharacteristic);
+            if (!characteristic) {
+              var characteristic = thermostat.addCharacteristic(homeKitCharacteristic);
+            }
+
+            characteristic
+              .on('set', function (value, callback, context) {
+                if (context != _this) {
+                  device.setValue(characteristicName, value, callback);
+                }
+              })
+              .on('get', function (callback) {
+                device.getValue(characteristicName, function (value) {
+                  callback(null, value);
+                });
+              })
+            ;
+          }
+        });
+      })
+
+      .on('update', function (characteristic, value) {
         var homeKitCharacteristic = homeMaticCharacteristicsMappings[characteristic];
         if (homeKitCharacteristic) {
-          thermostat.setCharacteristic(homeKitCharacteristic, value);
+          thermostat.getCharacteristic(homeKitCharacteristic).setValue(value, null, _this);
         }
-      });
+      })
+    ;
 
-      this._addAccessory(accessory);
-    }
-  }.bind(this));
+    _this._addAccessory(accessory);
+  });
 };
 
 HomeKitServer.prototype.publish = function (pin) {
