@@ -15,8 +15,9 @@ HomeMatic.init();
 var hkServer = new HomeKitServer();
 hkServer.addOutlets(numberOfOutlets);
 hkServer.addDoor();
-hkServer.addHomeMatic();
-hkServer.publish(hkPin);
+hkServer.addHomeMatic(function () {
+  hkServer.publish(hkPin);
+});
 
 var recognizer = new BellPatternRecognizer();
 recognizer.addPattern(pattern, function () {

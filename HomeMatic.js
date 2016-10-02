@@ -2,6 +2,7 @@
 
 var EventEmitter = require('events').EventEmitter;
 var rpc = require('binrpc');
+var storage = require('node-persist');
 
 var HomeMaticDevice = require('./HomeMaticDevice');
 
@@ -29,12 +30,17 @@ var emitter = new EventEmitter();
 
 function registerEvents() {
   rpcServer.on('system.listMethods', function (err, params, callback) {
-    callback(['system.listMethods', 'system.multicall', 'event']);
+    callback(null, ['system.listMethods', 'system.multicall', 'event', 'listDevices']);
   });
 
-  // rpcServer.on('listDevices', function (err, params, callback) {
-  //   callback([]);
-  // });
+  rpcServer.on('listDevices', function (err, params, callback) {
+    storage.getItem('devices').then(function (devices) {
+      var list = (devices || []).map(function (device) {
+        return { ADDRESS: device.ADDRESS, VERSION: device.VERSION };
+      });
+      callback(null, list);
+    });
+  });
 
   rpcServer.on('event', function (err, params, callback) {
     var device = devices[params[1]];
@@ -46,14 +52,18 @@ function registerEvents() {
 
   rpcServer.on('newDevices', function (err, params, callback) {
     var newDevices = params[1];
-    newDevices.forEach(function (newDevice) {
-      var deviceType = deviceMappings[newDevice.TYPE];
-      if (deviceType) {
-        var device = devices[newDevice.ADDRESS] = new HomeMaticDevice(deviceType, newDevice.ADDRESS, methodCall);
-        emitter.emit('newDevice', device);
-      }
-    });
-    callback(null);
+    addDevices(newDevices);
+
+    storage.getItem('devices')
+      .then(function (value) {
+        return storage.setItem('devices', (value || []).concat(newDevices));
+      })
+      .then(function () {
+        storage.persist();
+      })
+    ;
+
+    callback();
   });
 
   rpcClient.on('connect', function () {
@@ -66,6 +76,16 @@ function registerEvents() {
   //     console.log(err, res);
   //   });
   // }
+}
+
+function addDevices(devices) {
+  devices.forEach(function (deviceInfo) {
+    var deviceType = deviceMappings[deviceInfo.TYPE];
+    if (deviceType) {
+      var newDevice = devices[deviceInfo.ADDRESS] = new HomeMaticDevice(deviceType, deviceInfo.ADDRESS, methodCall);
+      emitter.emit('newDevice', newDevice);
+    }
+  });
 }
 
 function methodCall(method, params, callback) {
@@ -83,6 +103,11 @@ function methodCall(method, params, callback) {
 function subscribe() {
   methodCall('init', [subscriptionUrl, 'foo'], function (err, res) {
     console.log('Subscribed to HomeMatic events.');
+
+    storage.getItem('devices').then(function (devices) {
+      addDevices(devices);
+      emitter.emit('ready');
+    });
   });
 }
 
@@ -96,6 +121,8 @@ function unsubscribe(callback) {
 }
 
 function init() {
+  storage.init();
+
   if (!rpcServer && !rpcClient) {
     rpcServer = rpc.createServer(hosts.self);
     rpcClient = rpc.createClient(hosts.rfd);
@@ -110,7 +137,6 @@ function exit(callback) {
 module.exports = {
   init: init,
   exit: exit,
-  devices: devices,
   on: function (name, cb) {
     emitter.on(name, cb);
   }

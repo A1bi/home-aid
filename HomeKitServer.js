@@ -68,7 +68,7 @@ HomeKitServer.prototype.addDoor = function () {
   this._addAccessory(door);
 };
 
-HomeKitServer.prototype.addHomeMatic = function () {
+HomeKitServer.prototype.addHomeMatic = function (callback) {
   var _this = this;
 
   HomeMatic.on('newDevice', function (device) {
@@ -111,6 +111,8 @@ HomeKitServer.prototype.addHomeMatic = function () {
 
     _this._addAccessory(accessory);
   });
+
+  HomeMatic.on('ready', callback);
 };
 
 HomeKitServer.prototype.publish = function (pin) {
