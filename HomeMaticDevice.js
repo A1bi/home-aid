@@ -17,7 +17,7 @@ function HomeMaticDevice(address, methodCall) {
 
   this.methodCall('getParamset', [this.address, 'VALUES'], function (err, res) {
     for (var characteristic in res) {
-      this.values[characteristic] = res[characteristic];
+      this.updateValue(characteristic, res[characteristic]);
     }
     this.emit('ready');
   }.bind(this));
@@ -42,9 +42,23 @@ HomeMaticDevice.prototype.setValue = function (characteristic, value, callback, 
   callback();
 };
 
+HomeMaticDevice.prototype.updateValue = function (characteristic, value) {
+  if (characteristic === 'BATTERY_STATE') {
+    value = parseInt((value - 1.5) / 3.1 * 100);
+  }
+
+  if (this.values[characteristic] !== value) {
+    this.values[characteristic] = value;
+    return true;
+  }
+
+  return false;
+};
+
 HomeMaticDevice.prototype.applyUpdate = function (characteristic, value) {
-  this.values[characteristic] = value;
-  this.emit('update', characteristic, value);
+  if (this.updateValue(characteristic, value)) {
+    this.emit('update', characteristic, value);
+  }
 };
 
 HomeMaticDevice.prototype.getCharacteristics = function () {

@@ -41,14 +41,11 @@ HomeMaticThermostat.prototype.applyUpdate = function (characteristic, value) {
   if (characteristic === 'CONTROL_MODE') {
     characteristic = 'CURRENT_HEATING_STATE';
     switch (value) {
-      case 1:
-        value = 3;
-        break;
       case 3:
         value = 1;
         break;
       default:
-        return;
+        value = 0;
     }
   }
 
