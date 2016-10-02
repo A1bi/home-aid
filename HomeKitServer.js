@@ -12,7 +12,9 @@ module.exports = HomeKitServer;
 var homeMaticCharacteristicsMappings = {
   'SET_TEMPERATURE': HomeKit.Characteristic.TargetTemperature,
   'ACTUAL_TEMPERATURE': HomeKit.Characteristic.CurrentTemperature,
-  'BATTERY_STATE': HomeKit.Characteristic.BatteryLevel
+  'BATTERY_STATE': HomeKit.Characteristic.BatteryLevel,
+  'CURRENT_HEATING_STATE': HomeKit.Characteristic.CurrentHeatingCoolingState,
+  'TARGET_HEATING_STATE': HomeKit.Characteristic.TargetHeatingCoolingState
 };
 
 function HomeKitServer() {

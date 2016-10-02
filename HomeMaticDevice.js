@@ -9,12 +9,7 @@ var debounceTimers = {};
 
 module.exports = HomeMaticDevice;
 
-HomeMaticDevice.types = {
-  Thermostat: 1
-};
-
-function HomeMaticDevice(type, address, methodCall) {
-  this.type = type;
+function HomeMaticDevice(address, methodCall) {
   this.address = address;
   this.methodCall = methodCall;
   this.characteristics = [];
@@ -34,7 +29,7 @@ HomeMaticDevice.prototype.getValue = function (characteristic, callback) {
   callback(this.values[characteristic]);
 };
 
-HomeMaticDevice.prototype.setValue = function (characteristic, value, callback) {
+HomeMaticDevice.prototype.setValue = function (characteristic, value, callback, immediately) {
   clearTimeout(debounceTimers[characteristic]);
   debounceTimers[characteristic] = setTimeout(function () {
     console.log('setting value', characteristic, value);
@@ -42,7 +37,7 @@ HomeMaticDevice.prototype.setValue = function (characteristic, value, callback) 
       value = value.toFixed(1);
     }
     this.methodCall('setValue', [this.address, characteristic, value]);
-  }.bind(this), 1000);
+  }.bind(this), immediately ? 0 : 1000);
 
   callback();
 };

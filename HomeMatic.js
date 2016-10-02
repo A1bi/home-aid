@@ -5,6 +5,7 @@ var rpc = require('binrpc');
 var storage = require('node-persist');
 
 var HomeMaticDevice = require('./HomeMaticDevice');
+var HomeMaticThermostat = require('./HomeMaticThermostat');
 
 var hosts = {
   self: {
@@ -21,7 +22,7 @@ var rpcServer, rpcClient;
 var subscriptionUrl = 'xmlrpc_bin://' + hosts.self.host + ':' + hosts.self.port;
 
 var deviceMappings = {
-  'CLIMATECONTROL_RT_TRANSCEIVER': HomeMaticDevice.types.Thermostat
+  'CLIMATECONTROL_RT_TRANSCEIVER': HomeMaticThermostat
 };
 var managedDevices = {};
 
@@ -86,9 +87,9 @@ function registerEvents() {
 
 function addDevices(devices) {
   devices.forEach(function (deviceInfo) {
-    var deviceType = deviceMappings[deviceInfo.TYPE];
-    if (deviceType) {
-      var newDevice = managedDevices[deviceInfo.ADDRESS] = new HomeMaticDevice(deviceType, deviceInfo.ADDRESS, methodCall);
+    var deviceClass = deviceMappings[deviceInfo.TYPE];
+    if (deviceClass) {
+      var newDevice = managedDevices[deviceInfo.ADDRESS] = new deviceClass(deviceInfo.ADDRESS, methodCall);
       emitter.emit('newDevice', newDevice);
     }
   });
