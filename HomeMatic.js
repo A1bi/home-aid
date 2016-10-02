@@ -23,8 +23,9 @@ var subscriptionUrl = 'xmlrpc_bin://' + hosts.self.host + ':' + hosts.self.port;
 var deviceMappings = {
   'CLIMATECONTROL_RT_TRANSCEIVER': HomeMaticDevice.types.Thermostat
 };
-var devices = {};
+var managedDevices = {};
 
+var updateInterfaceClockTimer;
 var emitter = new EventEmitter();
 
 
@@ -43,7 +44,7 @@ function registerEvents() {
   });
 
   rpcServer.on('event', function (err, params, callback) {
-    var device = devices[params[1]];
+    var device = managedDevices[params[1]];
     if (device) {
       device.applyUpdate(params[2], params[3]);
     }
@@ -68,6 +69,11 @@ function registerEvents() {
 
   rpcClient.on('connect', function () {
     console.log('Connected to HomeMatic RFD RPC server.');
+
+    updateInterfaceClock();
+    clearTimeout(updateInterfaceClockTimer);
+    updateInterfaceClockTimer = setInterval(updateInterfaceClock, 21600000);
+
     subscribe();
   });
 
@@ -82,7 +88,7 @@ function addDevices(devices) {
   devices.forEach(function (deviceInfo) {
     var deviceType = deviceMappings[deviceInfo.TYPE];
     if (deviceType) {
-      var newDevice = devices[deviceInfo.ADDRESS] = new HomeMaticDevice(deviceType, deviceInfo.ADDRESS, methodCall);
+      var newDevice = managedDevices[deviceInfo.ADDRESS] = new HomeMaticDevice(deviceType, deviceInfo.ADDRESS, methodCall);
       emitter.emit('newDevice', newDevice);
     }
   });
@@ -98,6 +104,12 @@ function methodCall(method, params, callback) {
       callback(err, res);
     }
   });
+}
+
+function updateInterfaceClock() {
+  var timestamp = parseInt(Date.now() / 1000);
+  var offset = new Date().getTimezoneOffset() * -1;
+  methodCall('setInterfaceClock', [timestamp, offset]);
 }
 
 function subscribe() {
@@ -131,6 +143,7 @@ function init() {
 }
 
 function exit(callback) {
+  clearTimeout(updateInterfaceClockTimer);
   unsubscribe(callback);
 }
 

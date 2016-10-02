@@ -89,6 +89,8 @@ HomeKitServer.prototype.addHomeMatic = function (callback) {
               .on('set', function (value, callback, context) {
                 if (context != _this) {
                   device.setValue(characteristicName, value, callback);
+                } else {
+                  callback();
                 }
               })
               .on('get', function (callback) {
