@@ -17,14 +17,17 @@ util.inherits(HomeMaticThermostat, HomeMaticDevice);
 
 HomeMaticThermostat.prototype.setValue = function (characteristic, value, callback) {
   if (characteristic === 'TARGET_HEATING_STATE') {
-    if (value < 2) {
-      characteristic = value === 0 ? 'LOWERING_MODE' : 'BOOST_MODE';
+    if (value === 1) {
+      characteristic = 'BOOST_MODE';
       value = true;
       this.temperatureBeforeBoost = this.values.SET_TEMPERATURE;
+      this.values.TARGET_HEATING_STATE = 1;
+      this.applyUpdate('CURRENT_HEATING_STATE', 1);
 
-    } else if (value === 3) {
+    } else if (value === 3 && this.values.TARGET_HEATING_STATE !== value) {
+      this.values.TARGET_HEATING_STATE = value;
       characteristic = 'MANU_MODE';
-      value = this.temperatureBeforeBoost || 20;
+      value = this.temperatureBeforeBoost || 19;
 
     } else {
       callback();
@@ -36,15 +39,9 @@ HomeMaticThermostat.prototype.setValue = function (characteristic, value, callba
 };
 
 HomeMaticThermostat.prototype.applyUpdate = function (characteristic, value) {
-  if (characteristic === 'CONTROL_MODE') {
+  if (characteristic === 'VALVE_STATE') {
     characteristic = 'CURRENT_HEATING_STATE';
-    switch (value) {
-      case 3:
-        value = 1;
-        break;
-      default:
-        value = 0;
-    }
+    value = value >= 5 ? 1 : 0;
   }
 
   HomeMaticDevice.prototype.applyUpdate.call(this, characteristic, value);
