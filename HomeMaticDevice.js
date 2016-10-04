@@ -5,8 +5,6 @@ var EventEmitter = require('events').EventEmitter;
 
 var HomeMatic = require('./HomeMatic');
 
-var debounceTimers = {};
-
 module.exports = HomeMaticDevice;
 
 function HomeMaticDevice(address, methodCall) {
@@ -29,17 +27,14 @@ HomeMaticDevice.prototype.getValue = function (characteristic, callback) {
   callback(this.values[characteristic]);
 };
 
-HomeMaticDevice.prototype.setValue = function (characteristic, value, callback, immediately) {
-  clearTimeout(debounceTimers[characteristic]);
-  debounceTimers[characteristic] = setTimeout(function () {
-    console.log('setting value', characteristic, value);
-    if (typeof value === 'number') {
-      value = value.toFixed(1);
-    }
-    this.methodCall('setValue', [this.address, characteristic, value]);
-  }.bind(this), immediately ? 0 : 1000);
-
-  callback();
+HomeMaticDevice.prototype.setValue = function (characteristic, value, callback) {
+  console.log('setting value', characteristic, value);
+  if (typeof value === 'number') {
+    value = value.toFixed(1);
+  }
+  this.methodCall('setValue', [this.address, characteristic, value], function (err) {
+    callback(err);
+  });
 };
 
 HomeMaticDevice.prototype.updateValue = function (characteristic, value) {

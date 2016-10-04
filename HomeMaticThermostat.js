@@ -15,10 +15,8 @@ function HomeMaticThermostat(address, methodCall) {
 
 util.inherits(HomeMaticThermostat, HomeMaticDevice);
 
-HomeMaticThermostat.prototype.setValue = function (characteristic, value, callback, immediately) {
+HomeMaticThermostat.prototype.setValue = function (characteristic, value, callback) {
   if (characteristic === 'TARGET_HEATING_STATE') {
-    immediately = true;
-
     if (value < 2) {
       characteristic = value === 0 ? 'LOWERING_MODE' : 'BOOST_MODE';
       value = true;
@@ -34,7 +32,7 @@ HomeMaticThermostat.prototype.setValue = function (characteristic, value, callba
     }
   }
 
-  HomeMaticDevice.prototype.setValue.call(this, characteristic, value, callback, immediately);
+  HomeMaticDevice.prototype.setValue.call(this, characteristic, value, callback);
 };
 
 HomeMaticThermostat.prototype.applyUpdate = function (characteristic, value) {

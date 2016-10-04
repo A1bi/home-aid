@@ -88,12 +88,8 @@ HomeKitServer.prototype.addHomeMatic = function (callback) {
             }
 
             characteristic
-              .on('set', function (value, callback, context) {
-                if (context != _this) {
-                  device.setValue(characteristicName, value, callback);
-                } else {
-                  callback();
-                }
+              .on('set', function (value, callback) {
+                device.setValue(characteristicName, value, callback);
               })
               .on('get', function (callback) {
                 device.getValue(characteristicName, function (value) {
@@ -108,7 +104,7 @@ HomeKitServer.prototype.addHomeMatic = function (callback) {
       .on('update', function (characteristic, value) {
         var homeKitCharacteristic = homeMaticCharacteristicsMappings[characteristic];
         if (homeKitCharacteristic) {
-          thermostat.getCharacteristic(homeKitCharacteristic).setValue(value, null, _this);
+          thermostat.updateCharacteristic(homeKitCharacteristic, value);
         }
       })
     ;

@@ -77,12 +77,6 @@ function registerEvents() {
 
     subscribe();
   });
-
-  // function addDevice() {
-  //   rpcClient.methodCall('setInstallMode', [true, 60], function (err, res) {
-  //     console.log(err, res);
-  //   });
-  // }
 }
 
 function addDevices(devices) {
