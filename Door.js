@@ -3,9 +3,9 @@
 var EventEmitter = require('events').EventEmitter;
 var Gpio = require('onoff').Gpio;
 
-var opener = new Gpio(4, 'out');
+var opener = new Gpio(24, 'high', 'none', { activeLow: true });
 var bellListener = new Gpio(17, 'in', 'rising');
-var bell = new Gpio(27, 'out');
+var bell = new Gpio(23, 'high', 'none', { activeLow: true });
 
 var emitter = new EventEmitter();
 

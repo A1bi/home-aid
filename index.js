@@ -24,7 +24,7 @@ recognizer.addPattern(pattern, function () {
   Door.triggerOpener();
 });
 recognizer.on('bellRang', function () {
-  triggerBell(5);
+  triggerBell(2);
 });
 
 Door.on('bellRang', function () {
@@ -32,19 +32,23 @@ Door.on('bellRang', function () {
 });
 
 var triggerBell = function (remaining) {
-  Door.triggerBell(10, function () {
+  Door.triggerBell(150, function () {
     if (remaining > 0) {
       setTimeout(function () {
         triggerBell(remaining-1);
-      }, 10);
+      }, 150);
     }
   });
 };
 
+var exited = false;
 function exit(options) {
-  Door.exit();
-  Outlets.exit();
-  HomeMatic.exit();
+  if (!exited) {
+    Door.exit();
+    Outlets.exit();
+    HomeMatic.exit();
+    exited = true;
+  }
 
   console.log('Exiting');
   if (options && options.exit) {
