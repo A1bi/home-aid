@@ -10,10 +10,18 @@ var bell = new Gpio(23, 'high', 'none', { activeLow: true });
 var emitter = new EventEmitter();
 
 function trigger(pin, duration, callback) {
+  function emitEvent(value) {
+    if (pin === opener) {
+      emitter.emit('triggered', value);
+    }
+  }
+
   pin.writeSync(1);
+  emitEvent(true);
 
   setTimeout(function () {
     pin.writeSync(0);
+    emitEvent(false);
     if (callback) {
       callback();
     }
@@ -21,7 +29,7 @@ function trigger(pin, duration, callback) {
 }
 
 function triggerOpener(duration, callback) {
-  trigger(opener, duration || 2000, callback);
+  trigger(opener, duration || 3000, callback);
 }
 
 function triggerBell(duration, callback) {

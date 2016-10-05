@@ -49,10 +49,6 @@ HomeKitServer.prototype.addOutlets = function (numberOfOutlets) {
 HomeKitServer.prototype.addDoor = function () {
   var door = this._createAccessory('Door');
 
-  var getDoorState = function (callback) {
-    callback(null, HomeKit.Characteristic.LockTargetState.SECURED);
-  };
-
   var doorOpener = door.addService(HomeKit.Service.LockMechanism, 'Opener');
   doorOpener
     .getCharacteristic(HomeKit.Characteristic.LockTargetState)
@@ -60,12 +56,23 @@ HomeKitServer.prototype.addDoor = function () {
       Door.triggerOpener();
       callback();
     })
-    .on('get', getDoorState)
+    .on('get', function (callback) {
+      callback(null, HomeKit.Characteristic.LockTargetState.SECURED);
+    })
   ;
   doorOpener
     .getCharacteristic(HomeKit.Characteristic.LockCurrentState)
-    .on('get', getDoorState)
+    .on('get', function (callback) {
+      callback(null, HomeKit.Characteristic.LockCurrentState.SECURED);
+    })
   ;
+
+  Door.on('triggered', function (state) {
+    var value = state ? HomeKit.Characteristic.LockCurrentState.UNSECURED : HomeKit.Characteristic.LockCurrentState.SECURED;
+    doorOpener.updateCharacteristic(HomeKit.Characteristic.LockCurrentState, value);
+    value = state ? HomeKit.Characteristic.LockTargetState.UNSECURED : HomeKit.Characteristic.LockTargetState.SECURED;
+    doorOpener.updateCharacteristic(HomeKit.Characteristic.LockTargetState, value);
+  });
 
   this._addAccessory(door);
 };
