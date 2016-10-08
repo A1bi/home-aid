@@ -6,7 +6,11 @@ var HomeMatic = require('./HomeMatic');
 var HomeKitServer = require('./HomeKitServer');
 var BellPatternRecognizer = require('./BellPatternRecognizer');
 
-var hkPin = '031-45-154';
+var hkPin = process.argv[2];
+if (!hkPin) {
+  console.log('You have to specify a PIN for HomeKit.')
+  process.exit(1);
+}
 var numberOfOutlets = 3;
 var pattern = [1, 1, 1, 1.8, 1.8, 1, 1];
 

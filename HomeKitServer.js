@@ -27,7 +27,8 @@ HomeKitServer.prototype.addOutlets = function (numberOfOutlets) {
   for (var i = 1; i <= numberOfOutlets; i++) {
     var outlet = this._createAccessory('Outlet ' + i);
     outlet
-      .addService(HomeKit.Service.Lightbulb, 'Outlet ' + i, i)
+      .addService(HomeKit.Service.Outlet, 'Outlet ' + i, i)
+      .updateCharacteristic(HomeKit.Characteristic.OutletInUse, true)
       .getCharacteristic(HomeKit.Characteristic.On)
       .on('set', (function (j) {
         return function (value, callback) {
