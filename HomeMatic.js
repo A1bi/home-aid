@@ -115,6 +115,16 @@ function unsubscribe(callback) {
   });
 }
 
+function togglePairing(toggle, seconds) {
+  toggle = !!toggle;
+  seconds = seconds || 60;
+  methodCall('setInstallMode', [toggle, seconds, 1], function (err, res) {
+    if (!err) {
+      console.log((toggle ? 'Enabled' : 'Disabled') + ' pairing for ' + seconds + ' seconds.');
+    }
+  });
+}
+
 function init() {
   storage.init();
 
@@ -132,6 +142,7 @@ function exit(callback) {
 module.exports = {
   init: init,
   exit: exit,
+  togglePairing: togglePairing,
   on: function (name, cb) {
     emitter.on(name, cb);
   }

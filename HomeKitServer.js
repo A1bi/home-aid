@@ -120,6 +120,12 @@ HomeKitServer.prototype.addHomeMatic = function (callback) {
     _this._addAccessory(accessory);
   });
 
+  _this._bridge.on('identify', function (paired) {
+    if (paired) {
+      HomeMatic.togglePairing(true);
+    }
+  });
+
   HomeMatic.on('ready', callback);
 };
 
