@@ -23,16 +23,18 @@ hkServer.addHomeMatic(function () {
   hkServer.publish(hkPin);
 });
 
+Door.on('bellRang', function () {
+  console.log('doorbell pushed', new Date());
+});
+
 var recognizer = new BellPatternRecognizer();
 recognizer.addPattern(pattern, function () {
   Door.triggerOpener();
+  console.log('bell pattern recognized, opening door');
 });
 recognizer.on('bellRang', function () {
   triggerBell(2);
-});
-
-Door.on('bellRang', function () {
-  console.log(new Date());
+  console.log('no bell pattern recognized, triggering regular bell');
 });
 
 var triggerBell = function (remaining) {
