@@ -26,6 +26,7 @@ var deviceMappings = {
 };
 var managedDevices = {};
 
+var updateInterfaceClockTimer;
 var emitter = new EventEmitter();
 
 
@@ -69,6 +70,11 @@ function registerEvents() {
 
   rpcClient.on('connect', function () {
     console.log('Connected to HomeMatic RFD RPC server.');
+
+    updateInterfaceClock();
+    clearTimeout(updateInterfaceClockTimer);
+    updateInterfaceClockTimer = setInterval(updateInterfaceClock, 3600000);
+
     subscribe();
   });
 }
@@ -93,6 +99,12 @@ function methodCall(method, params, callback) {
       callback(err, res);
     }
   });
+}
+
+function updateInterfaceClock() {
+  var timestamp = parseInt(Date.now() / 1000);
+  var offset = new Date().getTimezoneOffset() * -1;
+  methodCall('setInterfaceClock', [timestamp, offset]);
 }
 
 function subscribe() {
@@ -136,6 +148,7 @@ function init() {
 }
 
 function exit(callback) {
+  clearTimeout(updateInterfaceClockTimer);
   unsubscribe(callback);
 }
 
