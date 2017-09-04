@@ -9,7 +9,9 @@
   },
   "license": "MIT",
   "dependencies": {
-    "hap-nodejs": "~0.4.11",
+    "binrpc": "^1.0.0",
+    "hap-nodejs": "~0.4.27",
+    "node-persist": "^2.0.7",
     "onoff": "~1.1.1",
     "sleep": "~4.0.0"
   }

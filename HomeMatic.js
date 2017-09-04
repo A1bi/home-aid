@@ -54,11 +54,25 @@ function registerEvents() {
 
   rpcServer.on('newDevices', function (err, params, callback) {
     var newDevices = params[1];
-    addDevices(newDevices);
 
     storage.getItem('devices')
-      .then(function (value) {
-        return storage.setItem('devices', (value || []).concat(newDevices));
+      .then(function (oldDevices) {
+        newDevices.forEach(function (newDevice) {
+          var isNew = oldDevices.every(function (oldDevice, index) {
+            if (oldDevice.ADDRESS === newDevice.ADDRESS) {
+              Object.assign(oldDevices[index], newDevice);
+              return false;
+            }
+            return true;
+          });
+
+          if (isNew) {
+            oldDevices.push(newDevice);
+            addDevices([newDevice]);
+          }
+        });
+
+        return storage.setItem('devices', oldDevices);
       })
       .then(function () {
         storage.persist();

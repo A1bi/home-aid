@@ -9,6 +9,7 @@ pids
 node_modules
 
 persist
+.node-persist
 
 # OS X
 .DS_Store

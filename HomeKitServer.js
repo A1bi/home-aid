@@ -144,7 +144,7 @@ HomeKitServer.prototype._createAccessory = function (name) {
   var accessory = new HomeKit.Accessory(name, uuid);
   accessory
     .getService(HomeKit.Service.AccessoryInformation)
-    .setCharacteristic(HomeKit.Characteristic.Manufacturer, 'Bäsch GmbH')
+    .setCharacteristic(HomeKit.Characteristic.Manufacturer, 'Foo GmbH')
     .setCharacteristic(HomeKit.Characteristic.Model, 'Eins')
     .setCharacteristic(HomeKit.Characteristic.SerialNumber, '12345678')
   ;
