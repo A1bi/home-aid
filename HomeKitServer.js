@@ -5,17 +5,9 @@ var HomeKit = require('hap-nodejs');
 var Door = require('./Door');
 var Outlets = require('./Outlets');
 var HomeMatic = require('./HomeMatic');
-var HomeMaticDevice = require('./HomeMaticDevice');
+var HomeKitHMThermostat = require('./HomeKitHMThermostat');
 
 module.exports = HomeKitServer;
-
-var homeMaticCharacteristicsMappings = {
-  'SET_TEMPERATURE': HomeKit.Characteristic.TargetTemperature,
-  'ACTUAL_TEMPERATURE': HomeKit.Characteristic.CurrentTemperature,
-  'BATTERY_STATE': HomeKit.Characteristic.BatteryLevel,
-  'CURRENT_HEATING_STATE': HomeKit.Characteristic.CurrentHeatingCoolingState,
-  'TARGET_HEATING_STATE': HomeKit.Characteristic.TargetHeatingCoolingState
-};
 
 function HomeKitServer() {
   HomeKit.init();
@@ -83,40 +75,7 @@ HomeKitServer.prototype.addHomeMatic = function (callback) {
 
   HomeMatic.on('newDevice', function (device) {
     var accessory = _this._createAccessory(device.address);
-    var thermostat = accessory.addService(HomeKit.Service.Thermostat);
-
-    device
-      .on('ready', function () {
-        device.getCharacteristics().forEach(function (characteristicName) {
-          var homeKitCharacteristic = homeMaticCharacteristicsMappings[characteristicName];
-          if (homeKitCharacteristic) {
-            var characteristic = thermostat.getCharacteristic(homeKitCharacteristic);
-            if (!characteristic) {
-              var characteristic = thermostat.addCharacteristic(homeKitCharacteristic);
-            }
-
-            characteristic
-              .on('set', function (value, callback) {
-                device.setValue(characteristicName, value, callback);
-              })
-              .on('get', function (callback) {
-                device.getValue(characteristicName, function (value) {
-                  callback(null, value);
-                });
-              })
-            ;
-          }
-        });
-      })
-
-      .on('update', function (characteristic, value) {
-        var homeKitCharacteristic = homeMaticCharacteristicsMappings[characteristic];
-        if (homeKitCharacteristic) {
-          thermostat.updateCharacteristic(homeKitCharacteristic, value);
-        }
-      })
-    ;
-
+    new HomeKitHMThermostat(accessory, device);
     _this._addAccessory(accessory);
   });
 
