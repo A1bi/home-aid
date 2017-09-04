@@ -7,7 +7,8 @@ var HomeMatic = require('./HomeMatic');
 
 module.exports = HomeMaticDevice;
 
-function HomeMaticDevice(address, methodCall) {
+function HomeMaticDevice(type, address, methodCall) {
+  this.type = type;
   this.address = address;
   this.methodCall = methodCall;
   this.characteristics = [];

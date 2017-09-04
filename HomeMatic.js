@@ -20,7 +20,7 @@ var hosts = {
 var rpcServer, rpcClient;
 var subscriptionUrl = 'xmlrpc_bin://' + hosts.self.host + ':' + hosts.self.port;
 
-var supportedDevices = ['CLIMATECONTROL_RT_TRANSCEIVER'];
+var supportedDevices = ['CLIMATECONTROL_RT_TRANSCEIVER', 'SMOKE_DETECTOR'];
 var managedDevices = {};
 
 var updateInterfaceClockTimer;
@@ -95,7 +95,7 @@ function addDevices(devices) {
   devices.forEach(function (deviceInfo) {
     if (supportedDevices.indexOf(deviceInfo.TYPE) > -1) {
       var addr = getParentAddress(deviceInfo.ADDRESS);
-      var newDevice = managedDevices[addr] = new HomeMaticDevice(deviceInfo.ADDRESS, methodCall);
+      var newDevice = managedDevices[addr] = new HomeMaticDevice(deviceInfo.TYPE, deviceInfo.ADDRESS, methodCall);
       emitter.emit('newDevice', newDevice);
     }
   });

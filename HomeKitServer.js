@@ -6,6 +6,12 @@ var Door = require('./Door');
 var Outlets = require('./Outlets');
 var HomeMatic = require('./HomeMatic');
 var HomeKitHMThermostat = require('./HomeKitHMThermostat');
+var HomeKitHMSmokeDetector = require('./HomeKitHMSmokeDetector');
+
+var deviceMapping = {
+  'CLIMATECONTROL_RT_TRANSCEIVER': HomeKitHMThermostat,
+  'SMOKE_DETECTOR': HomeKitHMSmokeDetector
+};
 
 module.exports = HomeKitServer;
 
@@ -75,7 +81,8 @@ HomeKitServer.prototype.addHomeMatic = function (callback) {
 
   HomeMatic.on('newDevice', function (device) {
     var accessory = _this._createAccessory(device.address);
-    new HomeKitHMThermostat(accessory, device);
+    var deviceClass = deviceMapping[device.type];
+    new deviceClass(accessory, device);
     _this._addAccessory(accessory);
   });
 

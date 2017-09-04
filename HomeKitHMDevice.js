@@ -45,6 +45,9 @@ HomeKitHMDevice.prototype.applyMappings = function (mappings) {
 
     var service = _this.accessory.getService(mapping.service);
     var characteristic = service.getCharacteristic(mapping.characteristic);
+    if (mapping.valueConversion) {
+      value = mapping.valueConversion(value);
+    }
     characteristic.updateValue(value);
   });
 };
