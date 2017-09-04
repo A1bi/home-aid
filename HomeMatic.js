@@ -42,7 +42,8 @@ function registerEvents() {
   });
 
   rpcServer.on('event', function (err, params, callback) {
-    var device = managedDevices[params[1]];
+    var addr = getParentAddress(params[1]);
+    var device = managedDevices[addr];
     if (device) {
       device.applyUpdate(params[2], params[3]);
     }
@@ -93,7 +94,8 @@ function registerEvents() {
 function addDevices(devices) {
   devices.forEach(function (deviceInfo) {
     if (supportedDevices.indexOf(deviceInfo.TYPE) > -1) {
-      var newDevice = managedDevices[deviceInfo.ADDRESS] = new HomeMaticDevice(deviceInfo.ADDRESS, methodCall);
+      var addr = getParentAddress(deviceInfo.ADDRESS);
+      var newDevice = managedDevices[addr] = new HomeMaticDevice(deviceInfo.ADDRESS, methodCall);
       emitter.emit('newDevice', newDevice);
     }
   });
@@ -145,6 +147,10 @@ function togglePairing(toggle, seconds) {
       console.log((toggle ? 'Enabled' : 'Disabled') + ' pairing for ' + seconds + ' seconds.');
     }
   });
+}
+
+function getParentAddress(address) {
+  return address.split(':')[0];
 }
 
 function init() {

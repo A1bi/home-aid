@@ -111,5 +111,6 @@ HomeKitServer.prototype._createAccessory = function (name) {
 };
 
 HomeKitServer.prototype._addAccessory = function (accessory) {
+  accessory.bridged = true;
   this._bridge.addBridgedAccessory(accessory);
 };
