@@ -24,6 +24,7 @@ hkServer.addHomeMatic(function () {
 });
 
 Door.on('bellRang', function () {
+  Door.playSound('sounds/comedy3.wav');
   console.log('doorbell pushed', new Date());
 });
 

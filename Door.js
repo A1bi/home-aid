@@ -2,10 +2,14 @@
 
 var EventEmitter = require('events').EventEmitter;
 var Gpio = require('onoff').Gpio;
+var spawn = require('child_process').spawn;
 
 var opener = new Gpio(24, 'high', 'none', { activeLow: true });
 var bellListener = new Gpio(17, 'in', 'rising');
-var bell = new Gpio(23, 'high', 'none', { activeLow: true });
+// var bell = new Gpio(23, 'high', 'none', { activeLow: true });
+var soundEnable = new Gpio(23, 'high', 'none', { activeLow: true });
+
+var currentSound;
 
 var emitter = new EventEmitter();
 
@@ -33,13 +37,31 @@ function triggerOpener(duration, callback) {
 }
 
 function triggerBell(duration, callback) {
-  trigger(bell, duration || 500, callback);
+  // trigger(bell, duration || 500, callback);
+}
+
+spawn('amixer', ['set', 'PCM', '--', '100%']);
+
+function playSound(path) {
+  if (currentSound) {
+    currentSound.removeAllListeners('exit');
+    currentSound.kill('SIGTERM');
+  } else {
+    soundEnable.writeSync(1);
+  }
+
+  currentSound = spawn('aplay', [path]);
+  currentSound.on('exit', function () {
+    soundEnable.writeSync(0);
+    currentSound = null;
+  });
 }
 
 function exit() {
   opener.unexport();
   bellListener.unexport();
-  bell.unexport();
+  // bell.unexport();
+  soundEnable.unexport();
 }
 
 var bellTriggerThreshold = 100;
@@ -76,6 +98,7 @@ bellListener.watch(function (err, value) {
 module.exports = {
   triggerOpener: triggerOpener,
   triggerBell: triggerBell,
+  playSound: playSound,
   on: function (name, cb) {
     emitter.on(name, cb);
   },
