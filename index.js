@@ -16,6 +16,10 @@ var pattern = [1, 1, 1, 1.8, 1.8, 1, 1];
 
 HomeMatic.init();
 
+Outlets.setDependencies({
+  3: 1
+});
+
 var hkServer = new HomeKitServer();
 hkServer.addOutlets(numberOfOutlets);
 hkServer.addDoor();
