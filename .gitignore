@@ -11,6 +11,8 @@ node_modules
 persist
 .node-persist
 
+sounds
+
 # OS X
 .DS_Store
 .AppleDouble

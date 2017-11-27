@@ -40,7 +40,7 @@ function triggerBell(duration, callback) {
   // trigger(bell, duration || 500, callback);
 }
 
-spawn('amixer', ['set', 'PCM', '--', '100%']);
+spawn('amixer', ['set', 'PCM', '--', '80%']);
 
 function playSound(path) {
   if (currentSound) {

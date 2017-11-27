@@ -45,13 +45,14 @@ HomeKitServer.prototype.addOutlets = function (numberOfOutlets) {
   }
 };
 
-HomeKitServer.prototype.addDoor = function () {
+HomeKitServer.prototype.addDoor = function (_cb) {
   var door = this._createAccessory('Door');
 
   var doorOpener = door.addService(HomeKit.Service.LockMechanism, 'Opener');
   doorOpener
     .getCharacteristic(HomeKit.Characteristic.LockTargetState)
     .on('set', function (value, callback) {
+      if (_cb) _cb();
       Door.triggerOpener();
       callback();
     })
