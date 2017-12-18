@@ -33,9 +33,8 @@ function HomeKitHMThermostat(accessory, device) {
       thermostat
         .getCharacteristic(HomeKit.Characteristic.CurrentHeatingCoolingState)
         .on('get', function (callback) {
-          _this.hmDevice.getValue('VALVE_STATE', function (value) {
-            callback(null, value >= 5 ? 1 : 0);
-          });
+          var value = _this.hmDevice.getValue('VALVE_STATE');
+          callback(null, value >= 5 ? 1 : 0);
         })
       ;
 
@@ -50,8 +49,10 @@ function HomeKitHMThermostat(accessory, device) {
             _this.temperatureBeforeBoost = temp.value;
 
           } else if (value === 3) {
-            setCharacteristic = 'MANU_MODE';
-            value = _this.temperatureBeforeBoost || 19;
+            if (_this.hmDevice.getValue('CONTROL_MODE') !== 1) {
+              setCharacteristic = 'MANU_MODE';
+              value = _this.temperatureBeforeBoost || 19;
+            }
           }
 
           if (setCharacteristic) {

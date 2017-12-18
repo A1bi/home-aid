@@ -26,9 +26,8 @@ HomeKitHMDevice.prototype.applyMappings = function (mappings) {
 
       characteristic
         .on('get', function (callback) {
-          _this.hmDevice.getValue(hmCharacteristic, function (value) {
-            callback(null, value);
-          });
+          var value = _this.hmDevice.getValue(hmCharacteristic);
+          callback(null, value);
         })
         .on('set', function (value, callback) {
           _this.hmDevice.setValue(hmCharacteristic, value, callback);

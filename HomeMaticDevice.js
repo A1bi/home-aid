@@ -24,8 +24,8 @@ function HomeMaticDevice(type, address, methodCall) {
 
 util.inherits(HomeMaticDevice, EventEmitter);
 
-HomeMaticDevice.prototype.getValue = function (characteristic, callback) {
-  callback(this.values[characteristic]);
+HomeMaticDevice.prototype.getValue = function (characteristic) {
+  return this.values[characteristic];
 };
 
 HomeMaticDevice.prototype.setValue = function (characteristic, value, callback) {
