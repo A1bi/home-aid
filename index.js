@@ -31,11 +31,6 @@ hkServer.addHomeMatic(function () {
   hkServer.publish(hkPin);
 });
 
-Door.on('bellRang', function () {
-  // Door.playSound('sounds/comedy3.wav');
-  console.log('doorbell pushed', new Date());
-});
-
 var bellIndicatorTimer;
 function bellIndicator(toggle) {
   Outlets.toggle(6, toggle);
@@ -51,19 +46,57 @@ function killBellIndicator() {
   console.log('bell indicator killed');
 }
 
-var recognizer = new BellPatternRecognizer();
-recognizer.addPattern(pattern, function () {
-  Door.triggerOpener();
-  console.log('bell pattern recognized, opening door');
+//var recognizer = new BellPatternRecognizer();
+//recognizer.addPattern(pattern, function () {
+//  Door.triggerOpener();
+//  console.log('bell pattern recognized, opening door');
+//});
+
+var entryMode = false;
+var entryTimer, entryFailTimer;
+Door.on('bellDown', function () {
+  if (entryMode) {
+    bellsCounted++;
+    Door.playSound('sounds/input.wav');
+
+  } else {
+    clearTimeout(entryTimer);
+    entryTimer = setTimeout(function () {
+      console.log('entry mode enabled');
+      entryMode = true;
+      bellsCounted = 0;
+      Door.playSound('sounds/entry_mode_enabled.wav');
+
+      entryFailTimer = setTimeout(function () {
+        console.log('entry timeout');
+        entryMode = false;
+        Door.playSound('sounds/fail.wav');
+      }, 10000);
+    }, 3000);
+  }
 });
-recognizer.on('bellRang', function () {
-  console.log('no bell pattern recognized, triggering regular bell');
-//  triggerBell(2);
-  bellIndicator(true);
-  console.log('bell indicator started');
-  setTimeout(function () {
-    killBellIndicator();
-  }, 20000);
+
+var bellsCounted;
+Door.on('bellUp', function () {
+  if (entryMode) {
+    if (bellsCounted === 4) {
+      console.log('entry successful, opening door');
+      entryMode = false;
+      clearTimeout(entryFailTimer);
+      Door.triggerOpener();
+      // Door.playSound('sounds/unlocked.wav');
+    }
+
+  } else {
+    console.log('no bell pattern recognized, triggering regular bell', new Date());
+    clearTimeout(entryTimer);
+//    triggerBell(2);
+    bellIndicator(true);
+    console.log('bell indicator started');
+    setTimeout(function () {
+      killBellIndicator();
+    }, 20000);
+  }
 });
 
 var triggerBell = function (remaining) {

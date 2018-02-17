@@ -5,10 +5,12 @@ var Gpio = require('onoff').Gpio;
 var spawn = require('child_process').spawn;
 
 var opener = new Gpio(24, 'high', 'none', { activeLow: true });
-var bellListener = new Gpio(17, 'in', 'rising');
+var bellListener = new Gpio(17, 'in', 'both');
 // var bell = new Gpio(23, 'high', 'none', { activeLow: true });
 var soundEnable = new Gpio(23, 'high', 'none', { activeLow: true });
 
+var active = false;
+var activeExpiration;
 var currentSound;
 
 var emitter = new EventEmitter();
@@ -65,24 +67,31 @@ function exit() {
 }
 
 var bellTriggerThreshold = 100;
+var bellTriggerTimer;
 var bellLastRise;
 
-function checkBell() {
-  if (bellListener.readSync()) {
-    if (!bellLastRise) {
-      bellLastRise = Date.now();
-    }
+function checkBell(val) {
+  if (val) {
+    bellLastRise = Date.now();
 
-    setTimeout(checkBell, 20);
+    bellTriggerTimer = setTimeout(function () {
+      setActive();
+      emitter.emit('bellDown');
+    }, bellTriggerThreshold);
 
-  } else if (bellLastRise) {
-    var duration = Date.now() - bellLastRise;
-    if (duration > bellTriggerThreshold) {
-      emitter.emit('bellRang', duration);
-    }
-
+  } else {
+    clearTimeout(bellTriggerTimer);
     bellLastRise = null;
   }
+}
+
+function setActive() {
+   active = true;
+
+   clearTimeout(activeExpiration);
+   activeExpiration = setTimeout(function () {
+     active = false;
+   }, 30000);
 }
 
 bellListener.watch(function (err, value) {
@@ -90,8 +99,19 @@ bellListener.watch(function (err, value) {
     throw err;
   }
 
-  if (!bellLastRise) {
-    checkBell();
+  if (active) {
+    setActive();
+
+    if (value) {
+      bellLastRise = Date.now();
+      emitter.emit('bellDown');
+    } else {
+      var duration = Date.now() - bellLastRise;
+      emitter.emit('bellUp', duration);
+    }
+
+  } else {
+    checkBell(value);
   }
 });
 
