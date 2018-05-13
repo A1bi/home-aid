@@ -5,12 +5,17 @@ var Outlets = require('./Outlets');
 var HomeMatic = require('./HomeMatic');
 var HomeKitServer = require('./HomeKitServer');
 var BellPatternRecognizer = require('./BellPatternRecognizer');
+var http = require('http');
+var fs = require('fs');
 
-var hkPin = process.argv[2];
-if (!hkPin) {
-  console.log('You have to specify a PIN for HomeKit.')
+if (process.argv.length < 4) {
+  console.log('You have to specify a PIN for HomeKit.');
+  console.log('You have to specify an auth token for web requests.');
   process.exit(1);
 }
+
+var hkPin = process.argv[2];
+var webAuthToken = process.argv[3];
 var numberOfOutlets = 6;
 var pattern = [1, 1, 1, 1.8, 1.8, 1, 1];
 
@@ -123,6 +128,33 @@ function exit(options) {
     process.exit();
   }
 }
+
+var sockPath = '/tmp/home-aid.sock';
+fs.unlinkSync(sockPath);
+
+var server = http.createServer(function (request, response) {
+  var status = 404;
+  var message = 'Unknown action';
+
+  if (request.headers['x-auth'] !== webAuthToken) {
+    status = 401;
+    message = 'Invalid auth token';
+
+  } else if (request.url === '/open-door' && request.method === 'POST') {
+    Door.triggerOpener();
+    status = 200;
+    message = 'Door opened';
+  }
+
+  response.writeHead(status, {'Content-Type': 'text/plain'});
+  response.write(message + '\n');
+  response.end();
+
+  console.log('got web request, responded with: "' + message  + '"', new Date());
+
+}).listen(sockPath);
+
+fs.chmodSync(sockPath, 666);
 
 process.on('exit', exit);
 process.on('SIGINT', exit.bind(null, { exit: true }));
