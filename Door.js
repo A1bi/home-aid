@@ -3,6 +3,7 @@
 var EventEmitter = require('events').EventEmitter;
 var Gpio = require('onoff').Gpio;
 var spawn = require('child_process').spawn;
+var fs = require('fs');
 
 var opener = new Gpio(24, 'high', 'none', { activeLow: true });
 var bellListener = new Gpio(17, 'in', 'both');
@@ -42,9 +43,11 @@ function triggerBell(duration, callback) {
   // trigger(bell, duration || 500, callback);
 }
 
-spawn('amixer', ['set', 'PCM', '--', '80%']);
+spawn('amixer', ['set', 'PCM', '--', '85%']);
 
 function playSound(path) {
+  if (!fs.existsSync(path)) return;
+
   if (currentSound) {
     currentSound.removeAllListeners('exit');
     currentSound.kill('SIGTERM');

@@ -88,7 +88,9 @@ Door.on('bellUp', function () {
       console.log('entry successful, opening door');
       entryMode = false;
       clearTimeout(entryFailTimer);
-      Door.triggerOpener();
+      Door.triggerOpener(null, function () {
+        Door.playSound('sounds/success.wav');
+      });
       // Door.playSound('sounds/unlocked.wav');
     }
 
