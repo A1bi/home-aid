@@ -11,8 +11,8 @@
   "dependencies": {
     "binrpc": "^1.0.0",
     "hap-nodejs": "~0.4.27",
-    "node-persist": "^2.0.7",
-    "onoff": "~1.1.1",
-    "sleep": "~5.1.1"
+    "node-persist": "~3.0.0",
+    "onoff": "~3.2.1",
+    "sleep": "~5.2.3"
   }
 }

@@ -72,9 +72,6 @@ function registerEvents() {
 
         return storage.setItem('devices', oldDevices);
       })
-      .then(function () {
-        storage.persist();
-      })
     ;
 
     callback();
