@@ -12,6 +12,7 @@ persist
 .node-persist
 
 sounds
+apns.json
 
 # OS X
 .DS_Store

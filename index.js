@@ -5,6 +5,7 @@ var Outlets = require('./Outlets');
 var HomeMatic = require('./HomeMatic');
 var HomeKitServer = require('./HomeKitServer');
 var BellPatternRecognizer = require('./BellPatternRecognizer');
+var PushNotifications = require('./PushNotifications');
 var http = require('http');
 var fs = require('fs');
 
@@ -103,6 +104,15 @@ Door.on('bellUp', function () {
     setTimeout(function () {
       killBellIndicator();
     }, 20000);
+
+    PushNotifications.send({
+      alert: {
+        'title-loc-key': 'notifications.bellRang.title',
+        'loc-key': 'notifications.bellRang.body'
+      },
+      sound: 'door_bell',
+      category: 'bellRang'
+    });
   }
 });
 
@@ -137,22 +147,45 @@ fs.unlinkSync(sockPath);
 var server = http.createServer(function (request, response) {
   var status = 404;
   var message = 'Unknown action';
+  var body = '';
 
-  if (request.headers['x-auth'] !== webAuthToken) {
-    status = 401;
-    message = 'Invalid auth token';
+  request.on('data', function (chunk) {
+    body += chunk.toString();
+  });
 
-  } else if (request.url === '/open-door' && request.method === 'POST') {
-    Door.triggerOpener();
-    status = 200;
-    message = 'Door opened';
-  }
+  request.on('end', function () {
+    if (request.headers['x-auth'] !== webAuthToken) {
+      status = 401;
+      message = 'Invalid auth token';
 
-  response.writeHead(status, {'Content-Type': 'text/plain'});
-  response.write(message + '\n');
-  response.end();
+    } else if (request.method === 'POST') {
+      if (request.url === '/open-door') {
+        Door.triggerOpener();
+        status = 200;
+        message = 'Door opened';
 
-  console.log('got web request, responded with: "' + message  + '"', new Date());
+      } else if (request.url === '/push-device-tokens') {
+        try {
+          var data = JSON.parse(body);
+          if (data.token) {
+            PushNotifications.registerDeviceToken(data.token);
+          }
+          status = 201;
+          message = 'Token registered';
+        } catch (e) {
+          console.log(e);
+          status = 400;
+          message = 'Invalid request';
+        }
+      }
+    }
+
+    response.writeHead(status, {'Content-Type': 'text/plain'});
+    response.write(message + '\n');
+    response.end();
+
+    console.log('got web request, responded with: "' + message  + '"', new Date());
+  });
 
 }).listen(sockPath);
 
