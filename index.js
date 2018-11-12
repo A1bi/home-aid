@@ -47,8 +47,10 @@ function bellIndicator(toggle) {
 }
 
 function killBellIndicator() {
+  if (!bellIndicatorTimer) return;
   bellIndicator(false);
   clearTimeout(bellIndicatorTimer);
+  bellIndicatorTimer = null;
   console.log('bell indicator killed');
 }
 
@@ -110,7 +112,7 @@ Door.on('bellUp', function () {
         'title-loc-key': 'notifications.bellRang.title',
         'loc-key': 'notifications.bellRang.body'
       },
-      sound: 'door_bell',
+      sound: 'door_bell.aif',
       category: 'bellRang'
     });
   }
