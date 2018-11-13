@@ -4,11 +4,13 @@ var util = require('util');
 var HomeKit = require('hap-nodejs');
 
 var HomeKitHMDevice = require('./HomeKitHMDevice');
+var Heater = require('./Heater');
 
 module.exports = HomeKitHMThermostat;
 
 function HomeKitHMThermostat(accessory, device) {
   var _this = this;
+  this.active = false;
 
   HomeKitHMDevice.apply(this, arguments);
 
@@ -69,11 +71,18 @@ function HomeKitHMThermostat(accessory, device) {
 
     .on('update', function (characteristic, value) {
       if (characteristic === 'VALVE_STATE') {
-        var thermostat = _this.accessory.getService(HomeKit.Service.Thermostat);
-        thermostat
-          .getCharacteristic(HomeKit.Characteristic.CurrentHeatingCoolingState)
-          .updateValue(value >= 5 ? 1 : 0)
-        ;
+        var active = value >= 5;
+        if (active !== _this.active) {
+          _this.active = active;
+
+          Heater.toggleActiveThermostat(active);
+
+          var thermostat = _this.accessory.getService(HomeKit.Service.Thermostat);
+          thermostat
+            .getCharacteristic(HomeKit.Characteristic.CurrentHeatingCoolingState)
+            .updateValue(active ? 1 : 0)
+          ;
+        }
       }
     })
   ;
