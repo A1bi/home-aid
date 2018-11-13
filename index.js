@@ -2,6 +2,7 @@
 
 var Door = require('./Door');
 var Outlets = require('./Outlets');
+var Heater = require('./Heater');
 var HomeMatic = require('./HomeMatic');
 var HomeKitServer = require('./HomeKitServer');
 var BellPatternRecognizer = require('./BellPatternRecognizer');
@@ -36,6 +37,7 @@ hkServer.addDoor(function () {
 hkServer.addHomeMatic(function () {
   hkServer.publish(hkPin);
 });
+hkServer.addHeater();
 
 var bellIndicatorTimer;
 function bellIndicator(toggle) {
@@ -133,6 +135,7 @@ function exit(options) {
   if (!exited) {
     Door.exit();
     Outlets.exit();
+    Heater.exit();
     HomeMatic.exit();
     exited = true;
   }
