@@ -35,8 +35,7 @@ function HomeKitHMThermostat(accessory, device) {
       thermostat
         .getCharacteristic(HomeKit.Characteristic.CurrentHeatingCoolingState)
         .on('get', function (callback) {
-          var value = _this.hmDevice.getValue('VALVE_STATE');
-          callback(null, value >= 5 ? 1 : 0);
+          callback(null, _this.active ? 1 : 0);
         })
       ;
 
@@ -71,7 +70,7 @@ function HomeKitHMThermostat(accessory, device) {
 
     .on('update', function (characteristic, value) {
       if (characteristic === 'VALVE_STATE') {
-        var active = value >= 5;
+        var active = value >= 25;
         if (active !== _this.active) {
           _this.active = active;
 
