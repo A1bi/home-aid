@@ -17,7 +17,7 @@ var provider = new apn.Provider({
     keyId: credentials.keyId,
     teamId: credentials.teamId
   },
-  production: false
+  production: true
 });
 
 storage.init();
