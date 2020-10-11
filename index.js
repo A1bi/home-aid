@@ -5,37 +5,25 @@ var Outlets = require('./Outlets');
 var Heater = require('./Heater');
 var HomeMatic = require('./HomeMatic');
 var HomeKitServer = require('./HomeKitServer');
+var config = require('./config');
 var BellPatternRecognizer = require('./BellPatternRecognizer');
 var PushNotifications = require('./PushNotifications');
 var http = require('http');
 var fs = require('fs');
 
-if (process.argv.length < 4) {
-  console.log('You have to specify a PIN for HomeKit.');
-  console.log('You have to specify an auth token for web requests.');
-  process.exit(1);
-}
-
-var hkPin = process.argv[2];
-var webAuthToken = process.argv[3];
-var numberOfOutlets = 6;
-var pattern = [1, 1, 1, 1.8, 1.8, 1, 1];
-
 HomeMatic.init();
 
-Outlets.setDependencies({
-  3: 1,
-  4: 1,
-  5: 1
-});
+PushNotifications.init(config.apns);
+
+Outlets.setDependencies(config.outlets.dependencies);
 
 var hkServer = new HomeKitServer();
-hkServer.addOutlets(numberOfOutlets);
+hkServer.addOutlets(config.outlets.count);
 hkServer.addDoor(function () {
   killBellIndicator();
 });
 hkServer.addHomeMatic(function () {
-  hkServer.publish(hkPin);
+  hkServer.publish(config.homeKit.pin);
 });
 hkServer.addHeater();
 
@@ -56,6 +44,7 @@ function killBellIndicator() {
   console.log('bell indicator killed');
 }
 
+// var pattern = [1, 1, 1, 1.8, 1.8, 1, 1];
 //var recognizer = new BellPatternRecognizer();
 //recognizer.addPattern(pattern, function () {
 //  Door.triggerOpener();
@@ -159,7 +148,7 @@ var server = http.createServer(function (request, response) {
   });
 
   request.on('end', function () {
-    if (request.headers['x-auth'] !== webAuthToken) {
+    if (request.headers['x-auth'] !== config.api.authToken) {
       status = 401;
       message = 'Invalid auth token';
 

@@ -1,26 +1,21 @@
 'use strict';
 
-var fs = require('fs');
 var apn = require('apn');
 var storage = require('node-persist');
+var provider;
 
-try {
-  var credentials = JSON.parse(fs.readFileSync('apns.json'));
-} catch (e) {
-  console.log('apns.json is missing or invalid.');
-  process.exit(1);
+function init(credentials) {
+  provider = new apn.Provider({
+    token: {
+      key: credentials.key,
+      keyId: credentials.keyId,
+      teamId: credentials.teamId
+    },
+    production: true
+  });
+
+  storage.init();
 }
-
-var provider = new apn.Provider({
-  token: {
-    key: credentials.key.join('\n'),
-    keyId: credentials.keyId,
-    teamId: credentials.teamId
-  },
-  production: true
-});
-
-storage.init();
 
 function send(aps, payload) {
   payload = payload || {};
@@ -52,6 +47,7 @@ function getAllDeviceTokens() {
 }
 
 module.exports = {
+  init: init,
   send: send,
   registerDeviceToken: registerDeviceToken
 };

@@ -1,0 +1,13 @@
+api:
+  auth_token:
+door:
+  speaker_volume: 60%
+homekit:
+  pin: 123-45-678
+outlets:
+  dependencies: {}
+apns:
+  key_id:
+  key:
+  team_id:
+  topic:
