@@ -55,10 +55,10 @@ bindings@^1.5.0:
   dependencies:
     file-uri-to-path "1.0.0"
 
-binrpc@~1.0.0:
-  version "1.0.1"
-  resolved "https://registry.yarnpkg.com/binrpc/-/binrpc-1.0.1.tgz#0539f2f36cd057da49781e8a7303960eb811ec27"
-  integrity sha1-BTny82zQV9pJeB6KcwOWDrgR7Cc=
+binrpc@1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/binrpc/-/binrpc-1.0.0.tgz#597b3babb53933909682ccab1a008f15cd4ba926"
+  integrity sha1-WXs7q7U5M5CWgsyrGgCPFc1LqSY=
   dependencies:
     async "1.5.2"
     binary "0.3.0"
@@ -163,13 +163,13 @@ ecdsa-sig-formatter@1.0.11:
   dependencies:
     safe-buffer "^5.0.1"
 
-epoll@^3.0.0:
-  version "3.0.0"
-  resolved "https://registry.yarnpkg.com/epoll/-/epoll-3.0.0.tgz#6346ca048c79ddb901a90dbddfb6813e82ba0cbb"
-  integrity sha512-Cr4yBZUkoKeTfi9Vr+7h1VhUYPP6t9f1/jgJOmEc2UEcWQqEOr5c4jdM0htJf+uB6KTGffDZGyR1UUUoclTwMQ==
+epoll@^4.0.0:
+  version "4.0.0"
+  resolved "https://registry.yarnpkg.com/epoll/-/epoll-4.0.0.tgz#60a7750bcb7ad8a796fb6689308e5b5c53b6aa1b"
+  integrity sha512-dENZbykco5w/vsFHuhD/5zla9VHm3htP1ROoX9MCc6L/7LVqGPFfcGS/g+/+pQLUclKw4uR9HnaZmsZ6fi5n+Q==
   dependencies:
     bindings "^1.5.0"
-    nan "^2.14.0"
+    nan "^2.14.1"
 
 es-abstract@^1.17.0-next.1, es-abstract@^1.17.4, es-abstract@^1.17.5:
   version "1.17.5"
@@ -462,7 +462,7 @@ multicast-dns@^7.2.2:
     dns-packet "^4.0.0"
     thunky "^1.0.2"
 
-nan@^2.13.2, nan@^2.14.0:
+nan@^2.14.1:
   version "2.14.1"
   resolved "https://registry.yarnpkg.com/nan/-/nan-2.14.1.tgz#d7be34dfa3105b91494c3147089315eff8874b01"
   integrity sha512-isWHgVjnFjh2x2yuJ/tj3JbwoHu3UC2dX5G/88Cm24yB6YopVgxvBObDY7n5xW6ExmFhJpSEQqFPvq9zaXc8Jw==
@@ -480,12 +480,10 @@ node-persist@^0.0.11:
     mkdirp "~0.5.1"
     q "~1.1.1"
 
-node-persist@~3.0.5:
-  version "3.0.5"
-  resolved "https://registry.yarnpkg.com/node-persist/-/node-persist-3.0.5.tgz#ee6128df8e0f9ea45ea80090b8dd9dd338408900"
-  integrity sha512-zJmBA58kI9QAxXLMc4NLswgzXVIqKfsfQtiySMF6eEQ3kVvoM3YHzcP0//L9u30Fqx3cYe1FL/a+fyB3VwO/oQ==
-  dependencies:
-    mkdirp "~0.5.1"
+node-persist@~3.1.0:
+  version "3.1.0"
+  resolved "https://registry.yarnpkg.com/node-persist/-/node-persist-3.1.0.tgz#9d4b03950bba70d37d13d3d3551840e25fd17e09"
+  integrity sha512-/j+fd/u71wNgKf3V2bx4tnDm+3GvLnlCuvf2MXbJ3wern+67IAb6zN9Leu1tCWPlPNZ+v1hLSibVukkPK2HqJw==
 
 object-inspect@^1.7.0:
   version "1.7.0"
@@ -515,12 +513,12 @@ object.assign@^4.1.0:
     has-symbols "^1.0.0"
     object-keys "^1.0.11"
 
-onoff@~5.0.0:
-  version "5.0.1"
-  resolved "https://registry.yarnpkg.com/onoff/-/onoff-5.0.1.tgz#61eb05b0778023183fc7905a4d2d996db12d401b"
-  integrity sha512-klKLu62wVU/rt3dyiltupMuDifcfScfGsdNLdjncJBoZP7PXsJP/oEBspiB7va1SnG2muyrpl6BYD+R/nsUFMw==
+onoff@^6.0.0:
+  version "6.0.1"
+  resolved "https://registry.yarnpkg.com/onoff/-/onoff-6.0.1.tgz#68ecaece4a4b4663fd59d72544dfec556d460ddd"
+  integrity sha512-lqnVyUiWLbb4T6sWTaOeCJn682EPyxaTyfJ5bP5LiTa0KMDlVPQR0ngVgzV3SkRkd0JnNxPvwTNj7QVvZTZsAw==
   dependencies:
-    epoll "^3.0.0"
+    epoll "^4.0.0"
     lodash.debounce "^4.0.8"
 
 put@0.0.6:
@@ -559,12 +557,12 @@ side-channel@^1.0.2:
     es-abstract "^1.17.0-next.1"
     object-inspect "^1.7.0"
 
-sleep@~6.2.0:
-  version "6.2.0"
-  resolved "https://registry.yarnpkg.com/sleep/-/sleep-6.2.0.tgz#88029df49529b8aa3ea5b5a510d44921101579e5"
-  integrity sha512-W4Rpfx82IGEa3lMQQPBbew0lvb0u3WY5geYzeVmIvNuc/y3YUcx2c02zZBOk+R8E318KAtYU/Ee5tqZwrKqZHg==
+sleep@^6.2.0:
+  version "6.3.0"
+  resolved "https://registry.yarnpkg.com/sleep/-/sleep-6.3.0.tgz#c524e0e6d8d2e45d3f14e0ba5650fbe45f2ae876"
+  integrity sha512-+WgYl951qdUlb1iS97UvQ01pkauoBK9ML9I/CMPg41v0Ze4EyMlTgFTDDo32iYj98IYqxIjDMRd+L71lawFfpQ==
   dependencies:
-    nan "^2.13.2"
+    nan "^2.14.1"
 
 string.prototype.trimend@^1.0.0:
   version "1.0.1"

@@ -6,10 +6,10 @@
   "license": "MIT",
   "dependencies": {
     "apn": "^2.2.0",
-    "binrpc": "~1.0.0",
+    "binrpc": "1.0.0",
     "hap-nodejs": "~0.4.50",
-    "node-persist": "~3.0.5",
-    "onoff": "~5.0.0",
-    "sleep": "~6.2.0"
+    "node-persist": "~3.1.0",
+    "onoff": "^6.0.0",
+    "sleep": "^6.2.0"
   }
 }
