@@ -7,15 +7,15 @@ var HomeMatic = require('./HomeMatic');
 var HomeKitServer = require('./HomeKitServer');
 var config = require('./config');
 var BellPatternRecognizer = require('./BellPatternRecognizer');
-var PushNotifications = require('./PushNotifications');
+var PushNotificationsService = require('./push_notifications_service');
 var http = require('http');
 var fs = require('fs');
 
 HomeMatic.init();
 
-PushNotifications.init(config.apns);
-
 Outlets.setDependencies(config.outlets.dependencies);
+
+var pushService = new PushNotificationsService(config.apns);
 
 var hkServer = new HomeKitServer();
 hkServer.addOutlets(config.outlets.count);
@@ -98,7 +98,7 @@ Door.on('bellUp', function () {
       killBellIndicator();
     }, 20000);
 
-    PushNotifications.send({
+    pushService.sendNotification({
       alert: {
         'title-loc-key': 'notifications.bellRang.title',
         'loc-key': 'notifications.bellRang.body'
@@ -162,7 +162,7 @@ var server = http.createServer(function (request, response) {
         try {
           var data = JSON.parse(body);
           if (data.token) {
-            PushNotifications.registerDeviceToken(data.token);
+            pushService.registerDeviceToken(data.token);
           }
           status = 201;
           message = 'Token registered';
