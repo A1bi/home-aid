@@ -1,13 +1,13 @@
 api:
-  auth_token:
+  authToken:
 door:
-  speaker_volume: 60%
+  speakerVolume: 60%
 homekit:
   pin: 123-45-678
 outlets:
   dependencies: {}
 apns:
-  key_id:
+  keyId:
   key:
-  team_id:
+  teamId:
   topic:
