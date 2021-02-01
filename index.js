@@ -29,7 +29,8 @@ hkServer.addHeater();
 
 var bellIndicatorTimer;
 function bellIndicator(toggle) {
-  Outlets.toggle(6, toggle);
+  if (!config.door.bellIndicatorOutlet) return;
+  Outlets.toggle(config.door.bellIndicatorOutlet, toggle);
   clearTimeout(bellIndicatorTimer);
   bellIndicatorTimer = setTimeout(function () {
    bellIndicator(!toggle);

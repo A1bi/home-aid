@@ -2,6 +2,7 @@ api:
   authToken:
 door:
   speakerVolume: 60%
+  bellIndicatorOutlet: 1
 homekit:
   pin: 123-45-678
 outlets:

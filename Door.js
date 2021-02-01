@@ -4,6 +4,7 @@ var EventEmitter = require('events').EventEmitter;
 var Gpio = require('onoff').Gpio;
 var spawn = require('child_process').spawn;
 var fs = require('fs');
+var config = require('./config');
 
 var opener = new Gpio(24, 'high', 'none', { activeLow: true });
 var bellListener = new Gpio(17, 'in', 'both');
@@ -43,7 +44,7 @@ function triggerBell(duration, callback) {
   // trigger(bell, duration || 500, callback);
 }
 
-spawn('amixer', ['set', 'PCM', '--', '85%']);
+spawn('amixer', ['set', 'PCM', '--', config.door.speakerVolume]);
 
 function playSound(path) {
   if (!fs.existsSync(path)) return;
