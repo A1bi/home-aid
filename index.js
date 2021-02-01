@@ -136,7 +136,7 @@ function exit(options) {
 }
 
 var sockPath = '/tmp/home-aid.sock';
-fs.unlinkSync(sockPath);
+if (fs.existsSync(sockPath)) fs.unlinkSync(sockPath);
 
 var server = http.createServer(function (request, response) {
   var status = 404;
