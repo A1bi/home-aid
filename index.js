@@ -14,24 +14,26 @@ var fs = require('fs');
 
 HomeMatic.init();
 
-Outlets.setDependencies(config.outlets.dependencies);
-
 var pushService = new PushNotificationsService(config.apns);
 
 var fritz = new FritzBox(config.fritzBox)
 
 var hkServer = new HomeKitServer();
-hkServer.addOutlets(config.outlets.count);
 
-var outlets = hkServer.addDoor(function () {
-  killBellIndicator();
+Outlets.setDependencies(config.outlets.dependencies);
+Outlets.on('stateChanged', function (number, state) {
+  if (!config.outlets.legacyWifiEnabling.includes(number)) return;
+
+  var toggle = config.outlets.legacyWifiEnabling.some(function (number) {
+    return Outlets.getState(number);
+  });
+  fritz.toggleWlan24(toggle);
 });
 
-config.outlets.legacyWifiEnabling.forEach(function (number) {
-  outlets[number - 1].on('set', function (toggle, callback) {
-    callback();
-    fritz.toggleWlan24(toggle);
-  });
+hkServer.addOutlets(config.outlets.count);
+
+hkServer.addDoor(function () {
+  killBellIndicator();
 });
 
 hkServer.addHomeMatic(function () {

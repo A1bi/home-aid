@@ -1,7 +1,10 @@
 'use strict';
 
+var EventEmitter = require('events').EventEmitter;
 var Gpio = require('onoff').Gpio;
 var sleep = require('sleep');
+
+var emitter = new EventEmitter();
 
 var transmitter = new Gpio(22, 'out');
 
@@ -78,6 +81,8 @@ function toggle(number, state) {
       toggle(parent, false);
     }
   }
+
+  emitter.emit('stateChanged', number, state);
 }
 
 function getState(number) {
@@ -102,5 +107,8 @@ module.exports = {
   toggle: toggle,
   getState: getState,
   setDependencies: setDependencies,
+  on: function (name, cb) {
+    emitter.on(name, cb);
+  },
   exit: exit
 };
