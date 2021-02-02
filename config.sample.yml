@@ -6,9 +6,15 @@ door:
 homekit:
   pin: 123-45-678
 outlets:
+  count: 3
+  legacyWifiEnabling: []
   dependencies: {}
 apns:
   keyId:
   key:
   teamId:
   topic:
+fritzBox:
+  host:
+  username:
+  password:

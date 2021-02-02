@@ -23,6 +23,8 @@ function HomeKitServer() {
 }
 
 HomeKitServer.prototype.addOutlets = function (numberOfOutlets) {
+  var outlets = [];
+
   for (var i = 1; i <= numberOfOutlets; i++) {
     var outlet = this._createAccessory('Outlet ' + i);
     outlet
@@ -43,7 +45,10 @@ HomeKitServer.prototype.addOutlets = function (numberOfOutlets) {
     ;
 
     this._addAccessory(outlet);
+    outlets.push(outlet);
   }
+
+  return outlets;
 };
 
 HomeKitServer.prototype.addDoor = function (_cb) {

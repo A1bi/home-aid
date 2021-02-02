@@ -8,6 +8,7 @@ var HomeKitServer = require('./HomeKitServer');
 var config = require('./config');
 var BellPatternRecognizer = require('./BellPatternRecognizer');
 var PushNotificationsService = require('./push_notifications_service');
+var FritzBox = require('./fritzbox');
 var http = require('http');
 var fs = require('fs');
 
@@ -17,14 +18,26 @@ Outlets.setDependencies(config.outlets.dependencies);
 
 var pushService = new PushNotificationsService(config.apns);
 
+var fritz = new FritzBox(config.fritzBox)
+
 var hkServer = new HomeKitServer();
 hkServer.addOutlets(config.outlets.count);
-hkServer.addDoor(function () {
+
+var outlets = hkServer.addDoor(function () {
   killBellIndicator();
 });
+
+config.outlets.legacyWifiEnabling.forEach(function (number) {
+  outlets[number - 1].on('set', function (toggle, callback) {
+    callback();
+    fritz.toggleWlan24(toggle);
+  });
+});
+
 hkServer.addHomeMatic(function () {
   hkServer.publish(config.homeKit.pin);
 });
+
 hkServer.addHeater();
 
 var bellIndicatorTimer;
