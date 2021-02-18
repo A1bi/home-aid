@@ -16,13 +16,15 @@ function HomeKitHMSmokeDetector(accessory, device) {
     STATE: {
       service: HomeKit.Service.SmokeSensor,
       characteristic: HomeKit.Characteristic.SmokeDetected,
+      defaultValue: 0,
       valueConversion: function (value) {
         return value ? 1 : 0;
       }
     },
     LOWBAT: {
       service: HomeKit.Service.SmokeSensor,
-      characteristic: HomeKit.Characteristic.StatusLowBattery
+      characteristic: HomeKit.Characteristic.StatusLowBattery,
+      defaultValue: 0
     }
   });
 

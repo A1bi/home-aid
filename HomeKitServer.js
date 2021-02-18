@@ -17,8 +17,6 @@ var deviceMapping = {
 module.exports = HomeKitServer;
 
 function HomeKitServer() {
-  HomeKit.init();
-
   this._bridge = new HomeKit.Bridge('Home Aid Bridge', HomeKit.uuid.generate('Home Aid Bridge'));
 }
 

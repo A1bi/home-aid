@@ -17,15 +17,18 @@ function HomeKitHMThermostat(accessory, device) {
   this.applyMappings({
     BATTERY_STATE: {
       service: HomeKit.Service.BatteryService,
-      characteristic: HomeKit.Characteristic.BatteryLevel
+      characteristic: HomeKit.Characteristic.BatteryLevel,
+      defaultValue: 100
     },
     SET_TEMPERATURE: {
       service: HomeKit.Service.Thermostat,
-      characteristic: HomeKit.Characteristic.TargetTemperature
+      characteristic: HomeKit.Characteristic.TargetTemperature,
+      defaultValue: 0
     },
     ACTUAL_TEMPERATURE: {
       service: HomeKit.Service.Thermostat,
-      characteristic: HomeKit.Characteristic.CurrentTemperature
+      characteristic: HomeKit.Characteristic.CurrentTemperature,
+      defaultValue: 0
     }
   });
 
