@@ -76,13 +76,17 @@ HomeKitServer.prototype.addDoor = function (_cb) {
   this._addAccessory(door);
 };
 
-HomeKitServer.prototype.addHomeMatic = function (callback) {
+HomeKitServer.prototype.addHomeMatic = function (config, callback) {
   var _this = this;
 
   HomeMatic.on('newDevice', function (device) {
     var accessory = _this._createAccessory(device.address);
     var deviceClass = deviceMapping[device.type];
-    new deviceClass(accessory, device);
+    var options;
+    if (deviceClass == HomeKitHMThermostat) {
+      options = config.thermostatValveOpenThreshold;
+    }
+    new deviceClass(accessory, device, options);
     _this._addAccessory(accessory);
   });
 

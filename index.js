@@ -36,7 +36,7 @@ hkServer.addOutlets(config.outlets.count);
 //  killBellIndicator();
 //});
 
-hkServer.addHomeMatic(function () {
+hkServer.addHomeMatic(config.homeMatic, function () {
   hkServer.publish(config.homeKit.pin);
 });
 

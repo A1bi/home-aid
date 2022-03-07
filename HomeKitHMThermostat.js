@@ -8,7 +8,7 @@ var Heater = require('./Heater');
 
 module.exports = HomeKitHMThermostat;
 
-function HomeKitHMThermostat(accessory, device) {
+function HomeKitHMThermostat(accessory, device, valveOpenThreshold) {
   var _this = this;
   this.active = false;
 
@@ -73,7 +73,7 @@ function HomeKitHMThermostat(accessory, device) {
 
     .on('update', function (characteristic, value) {
       if (characteristic === 'VALVE_STATE') {
-        var active = value >= 25;
+        var active = (value / 100) >= valveOpenThreshold;
         if (active !== _this.active) {
           _this.active = active;
 
