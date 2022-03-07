@@ -32,15 +32,15 @@ Outlets.on('stateChanged', function (number, state) {
 
 hkServer.addOutlets(config.outlets.count);
 
-hkServer.addDoor(function () {
-  killBellIndicator();
-});
+//hkServer.addDoor(function () {
+//  killBellIndicator();
+//});
 
 hkServer.addHomeMatic(function () {
   hkServer.publish(config.homeKit.pin);
 });
 
-hkServer.addHeater();
+//hkServer.addHeater();
 
 var bellIndicatorTimer;
 function bellIndicator(toggle) {

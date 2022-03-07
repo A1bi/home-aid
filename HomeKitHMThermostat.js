@@ -77,7 +77,7 @@ function HomeKitHMThermostat(accessory, device) {
         if (active !== _this.active) {
           _this.active = active;
 
-          Heater.toggleActiveThermostat(active);
+          //Heater.toggleActiveThermostat(active);
 
           var thermostat = _this.accessory.getService(HomeKit.Service.Thermostat);
           thermostat
