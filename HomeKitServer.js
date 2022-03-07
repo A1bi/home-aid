@@ -123,7 +123,8 @@ HomeKitServer.prototype.publish = function (pin) {
     username: "CC:22:3D:E3:CE:F6",
     port: 51826,
     pincode: pin,
-    category: HomeKit.Accessory.Categories.OTHER
+    category: HomeKit.Accessory.Categories.OTHER,
+    advertiser: "avahi"
   });
 };
 
