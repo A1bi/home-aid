@@ -3,10 +3,12 @@ const Door = require('./Door')
 const Outlets = require('./Outlets')
 const HomeMatic = require('./HomeMatic')
 const HomeKitHMThermostat = require('./HomeKitHMThermostat')
+const HomeKitHMIPThermostat = require('./HomeKitHMIPThermostat')
 const HomeKitHMSmokeDetector = require('./HomeKitHMSmokeDetector')
 
 const deviceMapping = {
   CLIMATECONTROL_RT_TRANSCEIVER: HomeKitHMThermostat,
+  HEATING_CLIMATECONTROL_TRANSCEIVER: HomeKitHMIPThermostat,
   SMOKE_DETECTOR: HomeKitHMSmokeDetector
 }
 
