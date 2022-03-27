@@ -1,53 +1,39 @@
-'use strict';
-
-module.exports = HomeKitHMDevice;
-
-function HomeKitHMDevice(accessory, device) {
-  this.hmDevice = device;
-  this.accessory = accessory;
-}
-
-HomeKitHMDevice.prototype.applyMappings = function (mappings) {
-  var _this = this;
-
-  for (var hmCharacteristic in mappings) {
-    (function (hmCharacteristic) {
-      var mapping = mappings[hmCharacteristic];
-
-      var service = _this.accessory.getService(mapping.service);
-      if (!service) {
-        service = _this.accessory.addService(mapping.service);
-      }
-
-      var characteristic = service.getCharacteristic(mapping.characteristic);
-      if (!characteristic) {
-        characteristic = service.addCharacteristic(mapping.characteristic);
-      }
-
-      characteristic
-        .on('get', function (callback) {
-          var value = _this.hmDevice.getValue(hmCharacteristic);
-          value = value || mapping.defaultValue;
-          callback(null, value);
-        })
-        .on('set', function (value, callback) {
-          _this.hmDevice.setValue(hmCharacteristic, value, callback);
-        })
-      ;
-    }).call(this, hmCharacteristic);
+class HomeKitHMDevice {
+  constructor (accessory, device) {
+    this.hmDevice = device
+    this.accessory = accessory
   }
 
-  this.hmDevice.on('update', function (characteristic, value) {
-    var mapping = mappings[characteristic];
-    if (!mapping) {
-      return;
+  applyMappings (mappings) {
+    for (const [hmCharacteristic, mapping] of Object.entries(mappings)) {
+      const service = this.accessory.getService(mapping.service) ||
+                      this.accessory.addService(mapping.service)
+
+      const characteristic = service.getCharacteristic(mapping.characteristic) ||
+                             service.addCharacteristic(mapping.characteristic)
+
+      characteristic
+        .on('get', callback => {
+          const value = this.hmDevice.getValue(hmCharacteristic) || mapping.defaultValue
+          callback(null, value)
+        })
+        .on('set', (value, callback) => {
+          this.hmDevice.setValue(hmCharacteristic, value, callback)
+        })
     }
 
-    var service = _this.accessory.getService(mapping.service);
-    var characteristic = service.getCharacteristic(mapping.characteristic);
-    if (mapping.valueConversion) {
-      value = mapping.valueConversion(value);
-    }
-    characteristic.updateValue(value);
-  });
-};
+    this.hmDevice.on('update', (hmCharacteristic, value) => {
+      const mapping = mappings[hmCharacteristic]
+      if (!mapping) return
+
+      const service = this.accessory.getService(mapping.service)
+      const characteristic = service.getCharacteristic(mapping.characteristic)
+      if (mapping.valueConversion) {
+        value = mapping.valueConversion(value)
+      }
+      characteristic.updateValue(value)
+    })
+  }
+}
+
+module.exports = HomeKitHMDevice
