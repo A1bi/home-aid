@@ -4,7 +4,6 @@ var HomeKit = require('hap-nodejs');
 
 var Door = require('./Door');
 var Outlets = require('./Outlets');
-var Heater = require('./Heater');
 var HomeMatic = require('./HomeMatic');
 var HomeKitHMThermostat = require('./HomeKitHMThermostat');
 var HomeKitHMSmokeDetector = require('./HomeKitHMSmokeDetector');
@@ -98,28 +97,6 @@ HomeKitServer.prototype.addHomeMatic = function (config, callback) {
   });
 
   HomeMatic.on('ready', callback);
-};
-
-HomeKitServer.prototype.addHeater = function () {
-  var heater = this._createAccessory('Heater');
-
-  var heaterActive = heater.addService(HomeKit.Service.Switch, 'Heater');
-  var heaterActiveOn = heaterActive.getCharacteristic(HomeKit.Characteristic.On);
-  heaterActiveOn
-    .on('set', function (value, callback) {
-      Heater.setActive(value);
-      callback();
-    })
-    .on('get', function (callback) {
-      callback(null, Heater.getActiveState());
-    })
-  ;
-
-  Heater.on('activeStateChanged', function (state) {
-    heaterActiveOn.updateValue(state);
-  });
-
-  this._addAccessory(heater);
 };
 
 HomeKitServer.prototype.publish = function (pin) {

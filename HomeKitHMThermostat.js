@@ -4,7 +4,6 @@ var util = require('util');
 var HomeKit = require('hap-nodejs');
 
 var HomeKitHMDevice = require('./HomeKitHMDevice');
-var Heater = require('./Heater');
 
 module.exports = HomeKitHMThermostat;
 
@@ -76,8 +75,6 @@ function HomeKitHMThermostat(accessory, device, valveOpenThreshold) {
         var active = (value / 100) >= valveOpenThreshold;
         if (active !== _this.active) {
           _this.active = active;
-
-          //Heater.toggleActiveThermostat(active);
 
           var thermostat = _this.accessory.getService(HomeKit.Service.Thermostat);
           thermostat
