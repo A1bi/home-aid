@@ -5,10 +5,11 @@ const HomeMaticDevice = require('./HomeMaticDevice')
 const supportedDevices = ['CLIMATECONTROL_RT_TRANSCEIVER', 'HEATING_CLIMATECONTROL_TRANSCEIVER', 'SMOKE_DETECTOR']
 
 class HomeMaticClient extends EventEmitter {
-  constructor (host, port) {
+  constructor (host, port, hmIp = false) {
     super()
     this.host = host
     this.port = port
+    this.hmIp = hmIp
     this.managedDevices = {}
   }
 
@@ -90,16 +91,14 @@ class HomeMaticClient extends EventEmitter {
   }
 
   updateInterfaceClock () {
-    try {
-      const timestamp = parseInt(Date.now() / 1000)
-      const offset = new Date().getTimezoneOffset() * -1
-      this.methodCall('setInterfaceClock', [timestamp, offset])
+    if (this.hmIp) return
 
-      clearTimeout(this.updateInterfaceClockTimer)
-      this.updateInterfaceClockTimer = setTimeout(this.updateInterfaceClock, 3600000)
-    } catch {
-      console.log('Failed to update interface clock. This is probably a HmIP interface.')
-    }
+    const timestamp = parseInt(Date.now() / 1000)
+    const offset = new Date().getTimezoneOffset() * -1
+    this.methodCall('setInterfaceClock', [timestamp, offset])
+
+    clearTimeout(this.updateInterfaceClockTimer)
+    this.updateInterfaceClockTimer = setTimeout(this.updateInterfaceClock, 3600000)
   }
 
   subscribe () {

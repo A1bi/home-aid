@@ -5,7 +5,8 @@ door:
   bellIndicatorOutlet: 1
 homeMatic:
   rpcServerPorts:
-    - 2001
+    - port: 2001
+      hmIp: false
   thermostatValveOpenThreshold: 0.15
 homeKit:
   pin: 123-45-678

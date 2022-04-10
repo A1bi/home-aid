@@ -28,7 +28,7 @@ hkServer.addOutlets(config.outlets.count)
 hkServer.publish(config.homeKit.pin)
 
 config.homeMatic.rpcServerPorts.forEach(port => {
-  const client = new HomeMaticClient('localhost', port)
+  const client = new HomeMaticClient('localhost', port.port, port.hmIp)
   homeMaticClients.push(client)
   hkServer.addHomeMatic(client, config.homeMatic)
   client.init()
