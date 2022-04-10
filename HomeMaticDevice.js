@@ -1,17 +1,17 @@
 const EventEmitter = require('events').EventEmitter
 
 class HomeMaticDevice extends EventEmitter {
-  constructor (type, address, version, methodCall) {
+  constructor (type, address, version, client) {
     super()
 
     this.type = type
     this.address = address
     this.version = version
-    this.methodCall = methodCall
+    this.client = client
     this.characteristics = []
     this.values = {}
 
-    this.methodCall('getParamset', [this.address, 'VALUES'], (err, res) => {
+    this.client.methodCall('getParamset', [this.address, 'VALUES'], (err, res) => {
       if (err) return console.log(err)
 
       for (var characteristic in res) {
@@ -30,7 +30,7 @@ class HomeMaticDevice extends EventEmitter {
     if (typeof value === 'number') {
       value = value.toFixed(1)
     }
-    this.methodCall('setValue', [this.address, characteristic, value], (err) => callback(err))
+    this.client.methodCall('setValue', [this.address, characteristic, value], (err) => callback(err))
   }
 
   updateValue (characteristic, value) {

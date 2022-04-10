@@ -1,6 +1,6 @@
 const Door = require('./Door')
 const Outlets = require('./Outlets')
-const HomeMatic = require('./HomeMatic')
+const HomeMaticClient = require('./HomeMaticClient')
 const HomeKitServer = require('./HomeKitServer')
 const config = require('./config')
 const PushNotificationsService = require('./push_notifications_service')
@@ -8,7 +8,7 @@ const FritzBox = require('./fritzbox')
 const http = require('http')
 const fs = require('fs')
 
-HomeMatic.init()
+const homeMaticClient = new HomeMaticClient('localhost', 2001)
 
 const pushService = new PushNotificationsService(config.apns)
 
@@ -25,17 +25,19 @@ Outlets.on('stateChanged', (number, state) => {
 })
 
 hkServer.addOutlets(config.outlets.count)
+hkServer.addHomeMatic(homeMaticClient, config.homeMatic)
 
-hkServer.addHomeMatic(config.homeMatic, () => {
+homeMaticClient.on('ready', () => {
   hkServer.publish(config.homeKit.pin)
 })
+homeMaticClient.init()
 
 var exited = false
 function exit (options) {
   if (!exited) {
     Door.exit()
     Outlets.exit()
-    HomeMatic.exit()
+    homeMaticClient.exit()
     exited = true
   }
 

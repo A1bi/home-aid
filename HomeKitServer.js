@@ -1,7 +1,6 @@
 const HomeKit = require('hap-nodejs')
 const Door = require('./Door')
 const Outlets = require('./Outlets')
-const HomeMatic = require('./HomeMatic')
 const HomeKitHMThermostat = require('./HomeKitHMThermostat')
 const HomeKitHMIPThermostat = require('./HomeKitHMIPThermostat')
 const HomeKitHMSmokeDetector = require('./HomeKitHMSmokeDetector')
@@ -67,8 +66,8 @@ class HomeKitServer {
     this.addAccessory(door)
   }
 
-  addHomeMatic (config, callback) {
-    HomeMatic.on('newDevice', device => {
+  addHomeMatic (client, config) {
+    client.on('newDevice', device => {
       const accessory = this.createAccessory(device.address)
       const deviceClass = deviceMapping[device.type]
       var options
@@ -81,13 +80,9 @@ class HomeKitServer {
     })
 
     this.bridge.on('identify', (paired, callback) => {
-      if (paired) {
-        HomeMatic.togglePairing(true)
-      }
+      if (paired) client.togglePairing(true)
       callback()
     })
-
-    HomeMatic.on('ready', callback)
   }
 
   publish (pin) {
