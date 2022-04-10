@@ -4,6 +4,8 @@ door:
   speakerVolume: 60%
   bellIndicatorOutlet: 1
 homeMatic:
+  rpcServerPorts:
+    - 2001
   thermostatValveOpenThreshold: 0.15
 homeKit:
   pin: 123-45-678

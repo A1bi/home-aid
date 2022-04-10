@@ -8,7 +8,7 @@ const FritzBox = require('./fritzbox')
 const http = require('http')
 const fs = require('fs')
 
-const homeMaticClient = new HomeMaticClient('localhost', 2001)
+const homeMaticClients = []
 
 const pushService = new PushNotificationsService(config.apns)
 
@@ -25,19 +25,21 @@ Outlets.on('stateChanged', (number, state) => {
 })
 
 hkServer.addOutlets(config.outlets.count)
-hkServer.addHomeMatic(homeMaticClient, config.homeMatic)
+hkServer.publish(config.homeKit.pin)
 
-homeMaticClient.on('ready', () => {
-  hkServer.publish(config.homeKit.pin)
+config.homeMatic.rpcServerPorts.forEach(port => {
+  const client = new HomeMaticClient('localhost', port)
+  homeMaticClients.push(client)
+  hkServer.addHomeMatic(client, config.homeMatic)
+  client.init()
 })
-homeMaticClient.init()
 
 var exited = false
 function exit (options) {
   if (!exited) {
     Door.exit()
     Outlets.exit()
-    homeMaticClient.exit()
+    homeMaticClients.forEach(client => client.exit())
     exited = true
   }
 
