@@ -1,11 +1,12 @@
 const EventEmitter = require('events').EventEmitter
 
 class HomeMaticDevice extends EventEmitter {
-  constructor (type, address, methodCall) {
+  constructor (type, address, version, methodCall) {
     super()
 
     this.type = type
     this.address = address
+    this.version = version
     this.methodCall = methodCall
     this.characteristics = []
     this.values = {}

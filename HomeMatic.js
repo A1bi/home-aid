@@ -1,6 +1,5 @@
 const EventEmitter = require('events').EventEmitter
 const rpc = require('binrpc')
-const storage = require('node-persist')
 const HomeMaticDevice = require('./HomeMaticDevice')
 
 const hosts = {
@@ -33,49 +32,27 @@ function registerEvents () {
   rpcServer.on('listDevices', (err, params, callback) => {
     if (err) return console.log(err)
 
-    storage.getItem('devices').then(devices => {
-      const list = (devices || []).map(device => {
-        return { ADDRESS: device.ADDRESS, VERSION: device.VERSION }
-      })
-      callback(null, list)
+    const list = Object.values(managedDevices).map(device => {
+      return { ADDRESS: device.address, VERSION: device.version }
     })
+    callback(null, list)
   })
 
   rpcServer.on('event', (err, params, callback) => {
     if (err) return console.log(err)
 
-    const addr = getParentAddress(params[1])
-    const device = managedDevices[addr]
-    if (device) {
-      device.applyUpdate(params[2], params[3])
-    }
+    const device = managedDevices[params[1]]
+    if (device) device.applyUpdate(params[2], params[3])
     callback()
   })
 
   rpcServer.on('newDevices', (err, params, callback) => {
     if (err) return console.log(err)
 
-    const newDevices = params[1]
-
-    storage.getItem('devices')
-      .then(oldDevices => {
-        for (var newDevice of newDevices) {
-          const isNew = oldDevices.every((oldDevice, index) => {
-            if (oldDevice.ADDRESS === newDevice.ADDRESS) {
-              Object.assign(oldDevices[index], newDevice)
-              return false
-            }
-            return true
-          })
-
-          if (isNew) {
-            oldDevices.push(newDevice)
-            addDevices([newDevice])
-          }
-        }
-
-        return storage.setItem('devices', oldDevices)
-      })
+    for (var newDevice of params[1]) {
+      const isNew = Object.keys(managedDevices).indexOf(newDevice.ADDRESS) < 0
+      if (isNew) createDevice(newDevice)
+    }
 
     callback()
   })
@@ -91,13 +68,11 @@ function registerEvents () {
   })
 }
 
-function addDevices (devices) {
-  for (var deviceInfo of devices) {
-    if (supportedDevices.indexOf(deviceInfo.TYPE) > -1) {
-      const addr = getParentAddress(deviceInfo.ADDRESS)
-      const newDevice = managedDevices[addr] = new HomeMaticDevice(deviceInfo.TYPE, deviceInfo.ADDRESS, methodCall)
-      emitter.emit('newDevice', newDevice)
-    }
+function createDevice (deviceInfo) {
+  if (supportedDevices.indexOf(deviceInfo.TYPE) > -1) {
+    const addr = deviceInfo.ADDRESS
+    const device = managedDevices[addr] = new HomeMaticDevice(deviceInfo.TYPE, addr, deviceInfo.VERSION, methodCall)
+    emitter.emit('newDevice', device)
   }
 }
 
@@ -119,11 +94,7 @@ function subscribe () {
     if (err) return console.log(err)
 
     console.log('Subscribed to HomeMatic events.')
-
-    storage.getItem('devices').then(devices => {
-      addDevices(devices)
-      emitter.emit('ready')
-    })
+    emitter.emit('ready')
   })
 }
 
@@ -146,13 +117,7 @@ function togglePairing (toggle, seconds) {
   })
 }
 
-function getParentAddress (address) {
-  return address.split(':')[0]
-}
-
 function init () {
-  storage.init()
-
   if (!rpcServer && !rpcClient) {
     rpcServer = rpc.createServer(hosts.self)
     rpcClient = rpc.createClient(hosts.rfd)
