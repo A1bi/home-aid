@@ -34,10 +34,6 @@ class HomeMaticDevice extends EventEmitter {
   }
 
   updateValue (characteristic, value) {
-    if (characteristic === 'BATTERY_STATE') {
-      value = parseInt((value - 1.5) / 3.1 * 100)
-    }
-
     if (this.values[characteristic] !== value) {
       this.values[characteristic] = value
       return true

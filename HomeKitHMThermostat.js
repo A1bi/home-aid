@@ -16,21 +16,22 @@ class HomeKitHMThermostat extends HomeKitHMDevice {
       ACTUAL_TEMPERATURE: {
         service: HomeKit.Service.Thermostat,
         characteristic: HomeKit.Characteristic.CurrentTemperature,
-        defaultValue: 0
+        defaultValue: 10
       }
     }
 
     mappings[this.constructor.targetTemperatureDatapoint] = {
       service: HomeKit.Service.Thermostat,
       characteristic: HomeKit.Characteristic.TargetTemperature,
-      defaultValue: 0
+      defaultValue: 10
     }
 
     if (this.constructor.batteryStateAvailable) {
       mappings.BATTERY_STATE = {
         service: HomeKit.Service.BatteryService,
         characteristic: HomeKit.Characteristic.BatteryLevel,
-        defaultValue: 100
+        defaultValue: 100,
+        valueConversion: value => parseInt((value - 1.5) / 3.1 * 100)
       }
     }
 
