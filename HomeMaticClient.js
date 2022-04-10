@@ -1,8 +1,8 @@
 const EventEmitter = require('events').EventEmitter
-const rpc = require('binrpc')
+const rpc = require('homematic-xmlrpc')
 const HomeMaticDevice = require('./HomeMaticDevice')
 
-const supportedDevices = ['CLIMATECONTROL_RT_TRANSCEIVER', 'SMOKE_DETECTOR']
+const supportedDevices = ['CLIMATECONTROL_RT_TRANSCEIVER', 'HEATING_CLIMATECONTROL_TRANSCEIVER', 'SMOKE_DETECTOR']
 
 class HomeMaticClient extends EventEmitter {
   constructor (host, port) {
@@ -15,7 +15,15 @@ class HomeMaticClient extends EventEmitter {
   init () {
     this.rpcServer = rpc.createServer({ host: 'localhost', port: 0 })
     this.rpcClient = rpc.createClient({ host: this.host, port: this.port })
+
+    this.updateInterfaceClock()
+    clearTimeout(this.updateInterfaceClockTimer)
+    this.updateInterfaceClockTimer = setInterval(this.updateInterfaceClock, 3600000)
+
     this.registerEvents()
+    this.subscribe()
+
+    console.log(`Attached to HomeMatic RPC server at ${this.host}:${this.port}.`)
   }
 
   registerEvents () {
@@ -51,16 +59,6 @@ class HomeMaticClient extends EventEmitter {
       }
 
       callback()
-    })
-
-    this.rpcClient.on('connect', () => {
-      console.log(`Connected to HomeMatic RPC server at ${this.host}:${this.port}.`)
-
-      this.updateInterfaceClock()
-      clearTimeout(this.updateInterfaceClockTimer)
-      this.updateInterfaceClockTimer = setInterval(this.updateInterfaceClock, 3600000)
-
-      this.subscribe()
     })
   }
 
@@ -119,7 +117,7 @@ class HomeMaticClient extends EventEmitter {
   }
 
   get subscriptionUrl () {
-    return `xmlrpc_bin://${this.rpcServer.host}:${this.rpcServer.server.address().port}`
+    return `xmlrpc://${this.rpcServer.host}:${this.rpcServer.server.address().port}`
   }
 }
 

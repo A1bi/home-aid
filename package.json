@@ -6,8 +6,8 @@
   "license": "MIT",
   "dependencies": {
     "apn": "^2.2.0",
-    "binrpc": "1.0.0",
     "hap-nodejs": "~0.10.0",
+    "homematic-xmlrpc": "^1.0.2",
     "js-yaml": "^3.14.0",
     "node-fetch": "^2.6.1",
     "node-persist": "~3.1.0",
