@@ -13,17 +13,13 @@ class HomeMaticClient extends EventEmitter {
   }
 
   init () {
-    this.rpcServer = rpc.createServer({ host: 'localhost', port: 0 })
-    this.rpcClient = rpc.createClient({ host: this.host, port: this.port })
+    this.rpcServer = rpc.createServer({ port: 0 }, () => {
+      this.rpcClient = rpc.createClient({ host: this.host, port: this.port })
+      this.registerEvents()
+      this.subscribe()
 
-    this.updateInterfaceClock()
-    clearTimeout(this.updateInterfaceClockTimer)
-    this.updateInterfaceClockTimer = setInterval(this.updateInterfaceClock, 3600000)
-
-    this.registerEvents()
-    this.subscribe()
-
-    console.log(`Attached to HomeMatic RPC server at ${this.host}:${this.port}.`)
+      console.log(`Attached to HomeMatic RPC server at ${this.host}:${this.port}.`)
+    })
   }
 
   registerEvents () {
@@ -31,6 +27,18 @@ class HomeMaticClient extends EventEmitter {
       if (err) return console.log(err)
 
       callback(null, ['system.listMethods', 'system.multicall', 'event', 'listDevices'])
+    })
+
+    this.rpcServer.on('system.multicall', (err, params, callback) => {
+      if (err) return console.log(err)
+
+      params[0].forEach(call => {
+        if (call.methodName === 'event') {
+          this.processEvent(call.params)
+        }
+      })
+
+      callback(null, '')
     })
 
     this.rpcServer.on('listDevices', (err, params, callback) => {
@@ -45,9 +53,8 @@ class HomeMaticClient extends EventEmitter {
     this.rpcServer.on('event', (err, params, callback) => {
       if (err) return console.log(err)
 
-      const device = this.managedDevices[params[1]]
-      if (device) device.applyUpdate(params[2], params[3])
-      callback()
+      this.processEvent(params)
+      callback(null, '')
     })
 
     this.rpcServer.on('newDevices', (err, params, callback) => {
@@ -58,8 +65,13 @@ class HomeMaticClient extends EventEmitter {
         if (isNew) this.createDevice(newDevice)
       }
 
-      callback()
+      callback(null, '')
     })
+  }
+
+  processEvent (params) {
+    const device = this.managedDevices[params[1]]
+    if (device) device.applyUpdate(params[2], params[3])
   }
 
   createDevice (deviceInfo) {
@@ -78,14 +90,23 @@ class HomeMaticClient extends EventEmitter {
   }
 
   updateInterfaceClock () {
-    const timestamp = parseInt(Date.now() / 1000)
-    const offset = new Date().getTimezoneOffset() * -1
-    this.methodCall('setInterfaceClock', [timestamp, offset])
+    try {
+      const timestamp = parseInt(Date.now() / 1000)
+      const offset = new Date().getTimezoneOffset() * -1
+      this.methodCall('setInterfaceClock', [timestamp, offset])
+
+      clearTimeout(this.updateInterfaceClockTimer)
+      this.updateInterfaceClockTimer = setTimeout(this.updateInterfaceClock, 3600000)
+    } catch {
+      console.log('Failed to update interface clock. This is probably a HmIP interface.')
+    }
   }
 
   subscribe () {
     this.methodCall('init', [this.subscriptionUrl, 'foo'], (err, res) => {
       if (err) return console.log(err)
+
+      this.updateInterfaceClock()
 
       console.log('Subscribed to HomeMatic events.')
       this.emit('ready')
@@ -117,7 +138,7 @@ class HomeMaticClient extends EventEmitter {
   }
 
   get subscriptionUrl () {
-    return `xmlrpc://${this.rpcServer.host}:${this.rpcServer.server.address().port}`
+    return `xmlrpc://localhost:${this.rpcServer.httpServer.address().port}`
   }
 }
 

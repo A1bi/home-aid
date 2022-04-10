@@ -28,7 +28,7 @@ class HomeMaticDevice extends EventEmitter {
   setValue (characteristic, value, callback) {
     console.log('setting value', characteristic, value)
     if (typeof value === 'number') {
-      value = value.toFixed(1)
+      value = { explicitDouble: value.toFixed(1) }
     }
     this.client.methodCall('setValue', [this.address, characteristic, value], (err) => callback(err))
   }
