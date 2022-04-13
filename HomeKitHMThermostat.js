@@ -14,6 +14,7 @@ class HomeKitHMThermostat extends HomeKitHMDevice {
     super(...arguments)
 
     this.active = false
+    this.valveOpenThreshold = valveOpenThreshold
 
     const mappings = {
       ACTUAL_TEMPERATURE: {
@@ -42,47 +43,56 @@ class HomeKitHMThermostat extends HomeKitHMDevice {
 
     this.hmDevice
       .on('ready', () => {
-        const thermostat = this.accessory.getService(Service.Thermostat)
-        thermostat.getCharacteristic(Characteristic.CurrentHeatingCoolingState)
-          .on('get', callback => callback(null, this.active ? Characteristic.CurrentHeatingCoolingState.HEAT : Characteristic.CurrentHeatingCoolingState.OFF))
+        this.thermostat.getCharacteristic(Characteristic.CurrentHeatingCoolingState)
+          .on('get', callback => callback(null, this.active ? Characteristic.CurrentHeatingCoolingState.HEAT
+            : Characteristic.CurrentHeatingCoolingState.OFF))
 
-        thermostat.getCharacteristic(Characteristic.TargetHeatingCoolingState)
-          .on('set', (value, callback) => {
-            var setCharacteristic
-            if (value === Characteristic.TargetHeatingCoolingState.HEAT) {
-              setCharacteristic = 'BOOST_MODE'
-              value = true
-              const temp = thermostat.getCharacteristic(Characteristic.TargetTemperature)
-              this.temperatureBeforeBoost = temp.value
-            } else if (value === Characteristic.TargetHeatingCoolingState.AUTO) {
-              if (this.hmDevice.getValue('CONTROL_MODE') !== 1) {
-                setCharacteristic = 'MANU_MODE'
-                value = this.temperatureBeforeBoost || 19
-              }
-            }
-
-            if (setCharacteristic) {
-              this.hmDevice.setValue(setCharacteristic, value, () => callback())
-            } else {
-              callback()
-            }
-          })
+        this.thermostat.getCharacteristic(Characteristic.TargetHeatingCoolingState)
+          .on('set', (value, callback) => this.setTargetHeatingCoolingState(value, callback))
           .updateValue(Characteristic.TargetHeatingCoolingState.AUTO)
       })
 
       .on('update', (characteristic, value) => {
-        if (characteristic === this.constructor.valveStateDatapoint) {
-          const active = (value / this.constructor.valveStateDivisor) >= valveOpenThreshold
-          if (active !== this.active) {
-            this.active = active
+        if (characteristic !== this.constructor.valveStateDatapoint) return
 
-            const thermostat = this.accessory.getService(Service.Thermostat)
-            thermostat.getCharacteristic(Characteristic.CurrentHeatingCoolingState)
-              .updateValue(active ? Characteristic.CurrentHeatingCoolingState.HEAT
-                : Characteristic.CurrentHeatingCoolingState.OFF)
-          }
-        }
+        this.updateCurrentHeatingCoolingState(value)
       })
+  }
+
+  setTargetHeatingCoolingState (state, callback) {
+    if (state === Characteristic.TargetHeatingCoolingState.HEAT) {
+      this.enableBoostMode(callback)
+    } else if (state === Characteristic.TargetHeatingCoolingState.AUTO) {
+      this.enableManualMode(callback)
+    } else {
+      callback()
+    }
+  }
+
+  updateCurrentHeatingCoolingState (value) {
+    const active = (value / this.constructor.valveStateDivisor) >= this.valveOpenThreshold
+    if (active === this.active) return
+
+    this.active = active
+    this.thermostat.getCharacteristic(Characteristic.CurrentHeatingCoolingState)
+      .updateValue(active ? Characteristic.CurrentHeatingCoolingState.HEAT
+        : Characteristic.CurrentHeatingCoolingState.OFF)
+  }
+
+  enableManualMode (callback) {
+    if (this.hmDevice.getValue('CONTROL_MODE') === 1) return
+
+    const temperature = this.temperatureBeforeBoost || 19
+    this.hmDevice.setValue('MANU_MODE', temperature, () => callback())
+  }
+
+  enableBoostMode (callback) {
+    this.temperatureBeforeBoost = this.thermostat.getCharacteristic(Characteristic.TargetTemperature).value
+    this.hmDevice.setValue('BOOST_MODE', true, () => callback())
+  }
+
+  get thermostat () {
+    return this.accessory.getService(Service.Thermostat)
   }
 }
 
