@@ -101,7 +101,7 @@ class HomeMaticClient extends EventEmitter {
     this.methodCall('setInterfaceClock', [timestamp, offset])
 
     clearTimeout(this.updateInterfaceClockTimer)
-    this.updateInterfaceClockTimer = setTimeout(this.updateInterfaceClock, 3600000)
+    this.updateInterfaceClockTimer = setTimeout(() => this.updateInterfaceClock(), 3600000)
   }
 
   subscribe () {
