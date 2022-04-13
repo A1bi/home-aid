@@ -33,13 +33,15 @@ class HomeMaticClient extends EventEmitter {
     this.rpcServer.on('system.multicall', (err, params, callback) => {
       if (err) return console.log(err)
 
-      params[0].forEach(call => {
+      const results = params[0].map(call => {
         if (call.methodName === 'event') {
-          this.processEvent(call.params)
+          return this.processEvent(call.params)
+        } else {
+          return ''
         }
       })
 
-      callback(null, '')
+      callback(null, results)
     })
 
     this.rpcServer.on('listDevices', (err, params, callback) => {
@@ -54,8 +56,8 @@ class HomeMaticClient extends EventEmitter {
     this.rpcServer.on('event', (err, params, callback) => {
       if (err) return console.log(err)
 
-      this.processEvent(params)
-      callback(null, '')
+      const result = this.processEvent(params)
+      callback(null, result)
     })
 
     this.rpcServer.on('newDevices', (err, params, callback) => {
@@ -73,6 +75,7 @@ class HomeMaticClient extends EventEmitter {
   processEvent (params) {
     const device = this.managedDevices[params[1]]
     if (device) device.applyUpdate(params[2], params[3])
+    return ''
   }
 
   createDevice (deviceInfo) {
