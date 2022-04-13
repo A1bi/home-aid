@@ -80,7 +80,7 @@ class HomeKitHMThermostat extends HomeKitHMDevice {
   }
 
   enableManualMode (callback) {
-    if (this.hmDevice.getValue('CONTROL_MODE') === 1) return
+    if (this.hmDevice.getValue('CONTROL_MODE') === 1) return callback()
 
     const temperature = this.temperatureBeforeBoost || 19
     this.hmDevice.setValue('MANU_MODE', temperature, () => callback())
