@@ -5,6 +5,9 @@ const HomeKitHMThermostat = require('./HomeKitHMThermostat')
 const HomeKitHMIPThermostat = require('./HomeKitHMIPThermostat')
 const HomeKitHMSmokeDetector = require('./HomeKitHMSmokeDetector')
 
+const Service = HomeKit.Service
+const Characteristic = HomeKit.Characteristic
+
 const deviceMapping = {
   CLIMATECONTROL_RT_TRANSCEIVER: HomeKitHMThermostat,
   HEATING_CLIMATECONTROL_TRANSCEIVER: HomeKitHMIPThermostat,
@@ -21,9 +24,9 @@ class HomeKitServer {
       const name = `Outlet ${i}`
       const outlet = this.createAccessory(name)
       outlet
-        .addService(HomeKit.Service.Outlet, name, i)
-        .updateCharacteristic(HomeKit.Characteristic.OutletInUse, true)
-        .getCharacteristic(HomeKit.Characteristic.On)
+        .addService(Service.Outlet, name, i)
+        .updateCharacteristic(Characteristic.OutletInUse, true)
+        .getCharacteristic(Characteristic.On)
         .on('set', (value, callback) => {
           Outlets.toggle(i, value)
           callback()
@@ -39,28 +42,28 @@ class HomeKitServer {
   addDoor (_cb) {
     const door = this.createAccessory('Door')
 
-    const doorOpener = door.addService(HomeKit.Service.LockMechanism, 'Opener')
+    const doorOpener = door.addService(Service.LockMechanism, 'Opener')
     doorOpener
-      .getCharacteristic(HomeKit.Characteristic.LockTargetState)
+      .getCharacteristic(Characteristic.LockTargetState)
       .on('set', (value, callback) => {
         if (_cb) _cb()
         Door.triggerOpener()
         callback()
       })
       .on('get', callback => {
-        callback(null, HomeKit.Characteristic.LockTargetState.SECURED)
+        callback(null, Characteristic.LockTargetState.SECURED)
       })
     doorOpener
-      .getCharacteristic(HomeKit.Characteristic.LockCurrentState)
+      .getCharacteristic(Characteristic.LockCurrentState)
       .on('get', callback => {
-        callback(null, HomeKit.Characteristic.LockCurrentState.SECURED)
+        callback(null, Characteristic.LockCurrentState.SECURED)
       })
 
     Door.on('triggered', state => {
-      var value = state ? HomeKit.Characteristic.LockCurrentState.UNSECURED : HomeKit.Characteristic.LockCurrentState.SECURED
-      doorOpener.updateCharacteristic(HomeKit.Characteristic.LockCurrentState, value)
-      value = state ? HomeKit.Characteristic.LockTargetState.UNSECURED : HomeKit.Characteristic.LockTargetState.SECURED
-      doorOpener.updateCharacteristic(HomeKit.Characteristic.LockTargetState, value)
+      var value = state ? Characteristic.LockCurrentState.UNSECURED : Characteristic.LockCurrentState.SECURED
+      doorOpener.updateCharacteristic(Characteristic.LockCurrentState, value)
+      value = state ? Characteristic.LockTargetState.UNSECURED : Characteristic.LockTargetState.SECURED
+      doorOpener.updateCharacteristic(Characteristic.LockTargetState, value)
     })
 
     this.addAccessory(door)
@@ -99,10 +102,10 @@ class HomeKitServer {
     const uuid = HomeKit.uuid.generate(`home-aid:accessories:${name}`)
     const accessory = new HomeKit.Accessory(name, uuid)
     accessory
-      .getService(HomeKit.Service.AccessoryInformation)
-      .setCharacteristic(HomeKit.Characteristic.Manufacturer, 'Foo GmbH')
-      .setCharacteristic(HomeKit.Characteristic.Model, 'Eins')
-      .setCharacteristic(HomeKit.Characteristic.SerialNumber, '12345678')
+      .getService(Service.AccessoryInformation)
+      .setCharacteristic(Characteristic.Manufacturer, 'Foo GmbH')
+      .setCharacteristic(Characteristic.Model, 'Eins')
+      .setCharacteristic(Characteristic.SerialNumber, '12345678')
     return accessory
   }
 

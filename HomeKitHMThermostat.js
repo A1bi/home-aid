@@ -1,6 +1,9 @@
 const HomeKit = require('hap-nodejs')
 const HomeKitHMDevice = require('./HomeKitHMDevice')
 
+const Service = HomeKit.Service
+const Characteristic = HomeKit.Characteristic
+
 class HomeKitHMThermostat extends HomeKitHMDevice {
   static batteryStateAvailable = true
   static targetTemperatureDatapoint = 'SET_TEMPERATURE'
@@ -14,22 +17,22 @@ class HomeKitHMThermostat extends HomeKitHMDevice {
 
     const mappings = {
       ACTUAL_TEMPERATURE: {
-        service: HomeKit.Service.Thermostat,
-        characteristic: HomeKit.Characteristic.CurrentTemperature,
+        service: Service.Thermostat,
+        characteristic: Characteristic.CurrentTemperature,
         defaultValue: 10
       }
     }
 
     mappings[this.constructor.targetTemperatureDatapoint] = {
-      service: HomeKit.Service.Thermostat,
-      characteristic: HomeKit.Characteristic.TargetTemperature,
+      service: Service.Thermostat,
+      characteristic: Characteristic.TargetTemperature,
       defaultValue: 10
     }
 
     if (this.constructor.batteryStateAvailable) {
       mappings.BATTERY_STATE = {
-        service: HomeKit.Service.BatteryService,
-        characteristic: HomeKit.Characteristic.BatteryLevel,
+        service: Service.BatteryService,
+        characteristic: Characteristic.BatteryLevel,
         defaultValue: 100,
         valueConversion: value => parseInt((value - 1.5) / 3.1 * 100)
       }
@@ -39,19 +42,19 @@ class HomeKitHMThermostat extends HomeKitHMDevice {
 
     this.hmDevice
       .on('ready', () => {
-        const thermostat = this.accessory.getService(HomeKit.Service.Thermostat)
-        thermostat.getCharacteristic(HomeKit.Characteristic.CurrentHeatingCoolingState)
-          .on('get', callback => callback(null, this.active ? 1 : 0))
+        const thermostat = this.accessory.getService(Service.Thermostat)
+        thermostat.getCharacteristic(Characteristic.CurrentHeatingCoolingState)
+          .on('get', callback => callback(null, this.active ? Characteristic.CurrentHeatingCoolingState.HEAT : Characteristic.CurrentHeatingCoolingState.OFF))
 
-        thermostat.getCharacteristic(HomeKit.Characteristic.TargetHeatingCoolingState)
+        thermostat.getCharacteristic(Characteristic.TargetHeatingCoolingState)
           .on('set', (value, callback) => {
             var setCharacteristic
-            if (value === 1) {
+            if (value === Characteristic.TargetHeatingCoolingState.HEAT) {
               setCharacteristic = 'BOOST_MODE'
               value = true
-              const temp = thermostat.getCharacteristic(HomeKit.Characteristic.TargetTemperature)
+              const temp = thermostat.getCharacteristic(Characteristic.TargetTemperature)
               this.temperatureBeforeBoost = temp.value
-            } else if (value === 3) {
+            } else if (value === Characteristic.TargetHeatingCoolingState.AUTO) {
               if (this.hmDevice.getValue('CONTROL_MODE') !== 1) {
                 setCharacteristic = 'MANU_MODE'
                 value = this.temperatureBeforeBoost || 19
@@ -64,7 +67,7 @@ class HomeKitHMThermostat extends HomeKitHMDevice {
               callback()
             }
           })
-          .updateValue(3)
+          .updateValue(Characteristic.TargetHeatingCoolingState.AUTO)
       })
 
       .on('update', (characteristic, value) => {
@@ -73,9 +76,10 @@ class HomeKitHMThermostat extends HomeKitHMDevice {
           if (active !== this.active) {
             this.active = active
 
-            const thermostat = this.accessory.getService(HomeKit.Service.Thermostat)
-            thermostat.getCharacteristic(HomeKit.Characteristic.CurrentHeatingCoolingState)
-              .updateValue(active ? 1 : 0)
+            const thermostat = this.accessory.getService(Service.Thermostat)
+            thermostat.getCharacteristic(Characteristic.CurrentHeatingCoolingState)
+              .updateValue(active ? Characteristic.CurrentHeatingCoolingState.HEAT
+                : Characteristic.CurrentHeatingCoolingState.OFF)
           }
         }
       })
