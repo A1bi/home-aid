@@ -1,42 +1,36 @@
-'use strict';
+const HomeKit = require('hap-nodejs')
+const HomeKitHMDevice = require('./HomeKitHMDevice')
 
-var util = require('util');
-var HomeKit = require('hap-nodejs');
+const Service = HomeKit.Service
+const Characteristic = HomeKit.Characteristic
 
-var HomeKitHMDevice = require('./HomeKitHMDevice');
+class HomeKitHMSmokeDetector extends HomeKitHMDevice {
+  constructor (accessory, device) {
+    super(...arguments)
 
-module.exports = HomeKitHMSmokeDetector;
-
-function HomeKitHMSmokeDetector(accessory, device) {
-  var _this = this;
-
-  HomeKitHMDevice.apply(this, arguments);
-
-  this.applyMappings({
-    STATE: {
-      service: HomeKit.Service.SmokeSensor,
-      characteristic: HomeKit.Characteristic.SmokeDetected,
-      defaultValue: 0,
-      valueConversion: function (value) {
-        return value ? 1 : 0;
+    this.applyMappings({
+      STATE: {
+        service: Service.SmokeSensor,
+        characteristic: Characteristic.SmokeDetected,
+        defaultValue: Characteristic.SmokeDetected.SMOKE_NOT_DETECTED,
+        valueConversion: value => value ? Characteristic.SmokeDetected.DETECTED
+          : Characteristic.SmokeDetected.SMOKE_NOT_DETECTED
+      },
+      LOWBAT: {
+        service: Service.SmokeSensor,
+        characteristic: Characteristic.StatusLowBattery,
+        defaultValue: Characteristic.StatusLowBattery.BATTERY_LEVEL_NORMAL
       }
-    },
-    LOWBAT: {
-      service: HomeKit.Service.SmokeSensor,
-      characteristic: HomeKit.Characteristic.StatusLowBattery,
-      defaultValue: 0
-    }
-  });
+    })
 
-  this.hmDevice.on('update', function (characteristic, value) {
-    if (characteristic === 'UNREACH') {
-      var sd = _this.accessory.getService(HomeKit.Service.SmokeSensor);
-      sd
-        .getCharacteristic(HomeKit.Characteristic.StatusActive)
-        .updateValue(!value)
-      ;
-    }
-  });
+    this.hmDevice.on('update', (characteristic, value) => {
+      if (characteristic === 'UNREACH') {
+        const sd = this.accessory.getService(Service.SmokeSensor)
+        sd.getCharacteristic(Characteristic.StatusActive)
+          .updateValue(!value)
+      }
+    })
+  }
 }
 
-util.inherits(HomeKitHMSmokeDetector, HomeKitHMDevice);
+module.exports = HomeKitHMSmokeDetector

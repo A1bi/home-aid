@@ -1,93 +1,99 @@
-'use strict';
+const HomeKit = require('hap-nodejs')
+const HomeKitHMDevice = require('./HomeKitHMDevice')
 
-var util = require('util');
-var HomeKit = require('hap-nodejs');
+const Service = HomeKit.Service
+const Characteristic = HomeKit.Characteristic
 
-var HomeKitHMDevice = require('./HomeKitHMDevice');
-var Heater = require('./Heater');
+class HomeKitHMThermostat extends HomeKitHMDevice {
+  static batteryStateAvailable = true
+  static targetTemperatureDatapoint = 'SET_TEMPERATURE'
+  static valveStateDatapoint = 'VALVE_STATE'
+  static valveStateDivisor = 100
 
-module.exports = HomeKitHMThermostat;
+  constructor (accessory, device, valveOpenThreshold) {
+    super(...arguments)
 
-function HomeKitHMThermostat(accessory, device, valveOpenThreshold) {
-  var _this = this;
-  this.active = false;
+    this.active = false
+    this.valveOpenThreshold = valveOpenThreshold
 
-  HomeKitHMDevice.apply(this, arguments);
-
-  this.applyMappings({
-    BATTERY_STATE: {
-      service: HomeKit.Service.BatteryService,
-      characteristic: HomeKit.Characteristic.BatteryLevel,
-      defaultValue: 100
-    },
-    SET_TEMPERATURE: {
-      service: HomeKit.Service.Thermostat,
-      characteristic: HomeKit.Characteristic.TargetTemperature,
-      defaultValue: 0
-    },
-    ACTUAL_TEMPERATURE: {
-      service: HomeKit.Service.Thermostat,
-      characteristic: HomeKit.Characteristic.CurrentTemperature,
-      defaultValue: 0
-    }
-  });
-
-  this.hmDevice
-    .on('ready', function () {
-      var thermostat = _this.accessory.getService(HomeKit.Service.Thermostat);
-      thermostat
-        .getCharacteristic(HomeKit.Characteristic.CurrentHeatingCoolingState)
-        .on('get', function (callback) {
-          callback(null, _this.active ? 1 : 0);
-        })
-      ;
-
-      thermostat
-        .getCharacteristic(HomeKit.Characteristic.TargetHeatingCoolingState)
-        .on('set', function (value, callback) {
-          var setCharacteristic;
-          if (value === 1) {
-            setCharacteristic = 'BOOST_MODE';
-            value = true;
-            var temp = thermostat.getCharacteristic(HomeKit.Characteristic.TargetTemperature);
-            _this.temperatureBeforeBoost = temp.value;
-
-          } else if (value === 3) {
-            if (_this.hmDevice.getValue('CONTROL_MODE') !== 1) {
-              setCharacteristic = 'MANU_MODE';
-              value = _this.temperatureBeforeBoost || 19;
-            }
-          }
-
-          if (setCharacteristic) {
-            _this.hmDevice.setValue(setCharacteristic, value, function () {
-              callback();
-            });
-          } else {
-            callback();
-          }
-        })
-        .updateValue(3)
-      ;
-    })
-
-    .on('update', function (characteristic, value) {
-      if (characteristic === 'VALVE_STATE') {
-        var active = (value / 100) >= valveOpenThreshold;
-        if (active !== _this.active) {
-          _this.active = active;
-
-          //Heater.toggleActiveThermostat(active);
-
-          var thermostat = _this.accessory.getService(HomeKit.Service.Thermostat);
-          thermostat
-            .getCharacteristic(HomeKit.Characteristic.CurrentHeatingCoolingState)
-            .updateValue(active ? 1 : 0)
-          ;
-        }
+    const mappings = {
+      ACTUAL_TEMPERATURE: {
+        service: Service.Thermostat,
+        characteristic: Characteristic.CurrentTemperature,
+        defaultValue: 10
       }
-    })
-  ;
+    }
+
+    mappings[this.constructor.targetTemperatureDatapoint] = {
+      service: Service.Thermostat,
+      characteristic: Characteristic.TargetTemperature,
+      defaultValue: 10
+    }
+
+    if (this.constructor.batteryStateAvailable) {
+      mappings.BATTERY_STATE = {
+        service: Service.BatteryService,
+        characteristic: Characteristic.BatteryLevel,
+        defaultValue: 100,
+        valueConversion: value => parseInt((value - 1.5) / 3.1 * 100)
+      }
+    }
+
+    this.applyMappings(mappings)
+
+    this.hmDevice
+      .on('ready', () => {
+        this.thermostat.getCharacteristic(Characteristic.CurrentHeatingCoolingState)
+          .on('get', callback => callback(null, this.active ? Characteristic.CurrentHeatingCoolingState.HEAT
+            : Characteristic.CurrentHeatingCoolingState.OFF))
+
+        this.thermostat.getCharacteristic(Characteristic.TargetHeatingCoolingState)
+          .on('set', (value, callback) => this.setTargetHeatingCoolingState(value, callback))
+          .updateValue(Characteristic.TargetHeatingCoolingState.AUTO)
+      })
+
+      .on('update', (characteristic, value) => {
+        if (characteristic !== this.constructor.valveStateDatapoint) return
+
+        this.updateCurrentHeatingCoolingState(value)
+      })
+  }
+
+  setTargetHeatingCoolingState (state, callback) {
+    if (state === Characteristic.TargetHeatingCoolingState.HEAT) {
+      this.enableBoostMode(callback)
+    } else if (state === Characteristic.TargetHeatingCoolingState.AUTO) {
+      this.enableManualMode(callback)
+    } else {
+      callback()
+    }
+  }
+
+  updateCurrentHeatingCoolingState (value) {
+    const active = (value / this.constructor.valveStateDivisor) >= this.valveOpenThreshold
+    if (active === this.active) return
+
+    this.active = active
+    this.thermostat.getCharacteristic(Characteristic.CurrentHeatingCoolingState)
+      .updateValue(active ? Characteristic.CurrentHeatingCoolingState.HEAT
+        : Characteristic.CurrentHeatingCoolingState.OFF)
+  }
+
+  enableManualMode (callback) {
+    if (this.hmDevice.getValue('CONTROL_MODE') === 1) return callback()
+
+    const temperature = this.temperatureBeforeBoost || 19
+    this.hmDevice.setValue('MANU_MODE', temperature, () => callback())
+  }
+
+  enableBoostMode (callback) {
+    this.temperatureBeforeBoost = this.thermostat.getCharacteristic(Characteristic.TargetTemperature).value
+    this.hmDevice.setValue('BOOST_MODE', true, () => callback())
+  }
+
+  get thermostat () {
+    return this.accessory.getService(Service.Thermostat)
+  }
 }
 
-util.inherits(HomeKitHMThermostat, HomeKitHMDevice);
+module.exports = HomeKitHMThermostat

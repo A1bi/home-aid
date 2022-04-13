@@ -1,150 +1,118 @@
-'use strict';
+const HomeKit = require('hap-nodejs')
+const Door = require('./Door')
+const Outlets = require('./Outlets')
+const HomeKitHMThermostat = require('./HomeKitHMThermostat')
+const HomeKitHMIPThermostat = require('./HomeKitHMIPThermostat')
+const HomeKitHMSmokeDetector = require('./HomeKitHMSmokeDetector')
 
-var HomeKit = require('hap-nodejs');
+const Service = HomeKit.Service
+const Characteristic = HomeKit.Characteristic
 
-var Door = require('./Door');
-var Outlets = require('./Outlets');
-var Heater = require('./Heater');
-var HomeMatic = require('./HomeMatic');
-var HomeKitHMThermostat = require('./HomeKitHMThermostat');
-var HomeKitHMSmokeDetector = require('./HomeKitHMSmokeDetector');
-
-var deviceMapping = {
-  'CLIMATECONTROL_RT_TRANSCEIVER': HomeKitHMThermostat,
-  'SMOKE_DETECTOR': HomeKitHMSmokeDetector
-};
-
-module.exports = HomeKitServer;
-
-function HomeKitServer() {
-  this._bridge = new HomeKit.Bridge('Home Aid Bridge', HomeKit.uuid.generate('Home Aid Bridge'));
+const deviceMapping = {
+  CLIMATECONTROL_RT_TRANSCEIVER: HomeKitHMThermostat,
+  HEATING_CLIMATECONTROL_TRANSCEIVER: HomeKitHMIPThermostat,
+  SMOKE_DETECTOR: HomeKitHMSmokeDetector
 }
 
-HomeKitServer.prototype.addOutlets = function (numberOfOutlets) {
-  for (var i = 1; i <= numberOfOutlets; i++) {
-    var outlet = this._createAccessory('Outlet ' + i);
-    outlet
-      .addService(HomeKit.Service.Outlet, 'Outlet ' + i, i)
-      .updateCharacteristic(HomeKit.Characteristic.OutletInUse, true)
-      .getCharacteristic(HomeKit.Characteristic.On)
-      .on('set', (function (j) {
-        return function (value, callback) {
-          Outlets.toggle(j, value);
-          callback();
-        }
-      })(i))
-      .on('get', (function (j) {
-        return function (callback) {
-          callback(null, Outlets.getState(j));
-        }
-      })(i))
-    ;
-
-    this._addAccessory(outlet);
+class HomeKitServer {
+  constructor () {
+    this.bridge = new HomeKit.Bridge('Home Aid Bridge', HomeKit.uuid.generate('Home Aid Bridge'))
   }
-};
 
-HomeKitServer.prototype.addDoor = function (_cb) {
-  var door = this._createAccessory('Door');
+  addOutlets (numberOfOutlets) {
+    for (var i = 1; i <= numberOfOutlets; i++) {
+      const name = `Outlet ${i}`
+      const outlet = this.createAccessory(name)
+      outlet
+        .addService(Service.Outlet, name, i)
+        .updateCharacteristic(Characteristic.OutletInUse, true)
+        .getCharacteristic(Characteristic.On)
+        .on('set', (value, callback) => {
+          Outlets.toggle(i, value)
+          callback()
+        })
+        .on('get', callback => {
+          callback(null, Outlets.getState(i))
+        })
 
-  var doorOpener = door.addService(HomeKit.Service.LockMechanism, 'Opener');
-  doorOpener
-    .getCharacteristic(HomeKit.Characteristic.LockTargetState)
-    .on('set', function (value, callback) {
-      if (_cb) _cb();
-      Door.triggerOpener();
-      callback();
-    })
-    .on('get', function (callback) {
-      callback(null, HomeKit.Characteristic.LockTargetState.SECURED);
-    })
-  ;
-  doorOpener
-    .getCharacteristic(HomeKit.Characteristic.LockCurrentState)
-    .on('get', function (callback) {
-      callback(null, HomeKit.Characteristic.LockCurrentState.SECURED);
-    })
-  ;
-
-  Door.on('triggered', function (state) {
-    var value = state ? HomeKit.Characteristic.LockCurrentState.UNSECURED : HomeKit.Characteristic.LockCurrentState.SECURED;
-    doorOpener.updateCharacteristic(HomeKit.Characteristic.LockCurrentState, value);
-    value = state ? HomeKit.Characteristic.LockTargetState.UNSECURED : HomeKit.Characteristic.LockTargetState.SECURED;
-    doorOpener.updateCharacteristic(HomeKit.Characteristic.LockTargetState, value);
-  });
-
-  this._addAccessory(door);
-};
-
-HomeKitServer.prototype.addHomeMatic = function (config, callback) {
-  var _this = this;
-
-  HomeMatic.on('newDevice', function (device) {
-    var accessory = _this._createAccessory(device.address);
-    var deviceClass = deviceMapping[device.type];
-    var options;
-    if (deviceClass == HomeKitHMThermostat) {
-      options = config.thermostatValveOpenThreshold;
+      this.addAccessory(outlet)
     }
-    new deviceClass(accessory, device, options);
-    _this._addAccessory(accessory);
-  });
+  }
 
-  _this._bridge.on('identify', function (paired, callback) {
-    if (paired) {
-      HomeMatic.togglePairing(true);
-    }
-    callback();
-  });
+  addDoor (_cb) {
+    const door = this.createAccessory('Door')
 
-  HomeMatic.on('ready', callback);
-};
+    const doorOpener = door.addService(Service.LockMechanism, 'Opener')
+    doorOpener
+      .getCharacteristic(Characteristic.LockTargetState)
+      .on('set', (value, callback) => {
+        if (_cb) _cb()
+        Door.triggerOpener()
+        callback()
+      })
+      .on('get', callback => {
+        callback(null, Characteristic.LockTargetState.SECURED)
+      })
+    doorOpener
+      .getCharacteristic(Characteristic.LockCurrentState)
+      .on('get', callback => {
+        callback(null, Characteristic.LockCurrentState.SECURED)
+      })
 
-HomeKitServer.prototype.addHeater = function () {
-  var heater = this._createAccessory('Heater');
-
-  var heaterActive = heater.addService(HomeKit.Service.Switch, 'Heater');
-  var heaterActiveOn = heaterActive.getCharacteristic(HomeKit.Characteristic.On);
-  heaterActiveOn
-    .on('set', function (value, callback) {
-      Heater.setActive(value);
-      callback();
+    Door.on('triggered', state => {
+      var value = state ? Characteristic.LockCurrentState.UNSECURED : Characteristic.LockCurrentState.SECURED
+      doorOpener.updateCharacteristic(Characteristic.LockCurrentState, value)
+      value = state ? Characteristic.LockTargetState.UNSECURED : Characteristic.LockTargetState.SECURED
+      doorOpener.updateCharacteristic(Characteristic.LockTargetState, value)
     })
-    .on('get', function (callback) {
-      callback(null, Heater.getActiveState());
+
+    this.addAccessory(door)
+  }
+
+  addHomeMatic (client, config) {
+    client.on('newDevice', device => {
+      const accessory = this.createAccessory(device.address)
+      const deviceClass = deviceMapping[device.type]
+      var options
+      if (deviceClass === HomeKitHMThermostat) {
+        options = config.thermostatValveOpenThreshold
+      }
+      // eslint-disable-next-line no-new, new-cap
+      new deviceClass(accessory, device, options)
+      this.addAccessory(accessory)
     })
-  ;
 
-  Heater.on('activeStateChanged', function (state) {
-    heaterActiveOn.updateValue(state);
-  });
+    this.bridge.on('identify', (paired, callback) => {
+      if (paired) client.togglePairing(true)
+      callback()
+    })
+  }
 
-  this._addAccessory(heater);
-};
+  publish (pin) {
+    this.bridge.publish({
+      username: 'CC:22:3D:E3:CE:F6',
+      port: 51826,
+      pincode: pin,
+      category: HomeKit.Accessory.Categories.OTHER,
+      advertiser: 'avahi'
+    })
+  }
 
-HomeKitServer.prototype.publish = function (pin) {
-  this._bridge.publish({
-    username: "CC:22:3D:E3:CE:F6",
-    port: 51826,
-    pincode: pin,
-    category: HomeKit.Accessory.Categories.OTHER,
-    advertiser: "avahi"
-  });
-};
+  createAccessory (name) {
+    const uuid = HomeKit.uuid.generate(`home-aid:accessories:${name}`)
+    const accessory = new HomeKit.Accessory(name, uuid)
+    accessory
+      .getService(Service.AccessoryInformation)
+      .setCharacteristic(Characteristic.Manufacturer, 'Foo GmbH')
+      .setCharacteristic(Characteristic.Model, 'Eins')
+      .setCharacteristic(Characteristic.SerialNumber, '12345678')
+    return accessory
+  }
 
-HomeKitServer.prototype._createAccessory = function (name) {
-  var uuid = HomeKit.uuid.generate('home-aid:accessories:' + name);
-  var accessory = new HomeKit.Accessory(name, uuid);
-  accessory
-    .getService(HomeKit.Service.AccessoryInformation)
-    .setCharacteristic(HomeKit.Characteristic.Manufacturer, 'Foo GmbH')
-    .setCharacteristic(HomeKit.Characteristic.Model, 'Eins')
-    .setCharacteristic(HomeKit.Characteristic.SerialNumber, '12345678')
-  ;
-  return accessory;
-};
+  addAccessory (accessory) {
+    accessory.bridged = true
+    this.bridge.addBridgedAccessory(accessory)
+  }
+}
 
-HomeKitServer.prototype._addAccessory = function (accessory) {
-  accessory.bridged = true;
-  this._bridge.addBridgedAccessory(accessory);
-};
+module.exports = HomeKitServer
